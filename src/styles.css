@@ -614,17 +614,58 @@ h2 {
   color: rgba(238, 246, 240, 0.75);
 }
 
+/* ═══════════════════════════════════════════════════════ */
+/*  ANALYZE PAGE — Premium UX Redesign                    */
+/* ═══════════════════════════════════════════════════════ */
+
 .analyze-section {
   padding: 24px 0 96px;
 }
 
-.analyze-layout {
+.analyze-layout-v2 {
   display: grid;
-  grid-template-columns: 0.9fr 1.1fr;
-  gap: 20px;
+  grid-template-columns: 0.85fr 1.15fr;
+  gap: 24px;
+  align-items: start;
 }
 
-.analyze-form input[type="file"] {
+/* ── Upload Panel ──────────────────────────────────────── */
+.analyze-upload-panel {
+  position: sticky;
+  top: 90px;
+}
+
+/* ── Drop Zone ─────────────────────────────────────────── */
+.drop-zone {
+  position: relative;
+  border: 2px dashed rgba(26, 77, 40, 0.22);
+  border-radius: var(--radius);
+  padding: 36px 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.3s ease, background 0.3s ease, transform 0.2s ease;
+  background: rgba(26, 77, 40, 0.02);
+  margin-bottom: 16px;
+}
+
+.drop-zone:hover {
+  border-color: var(--accent);
+  background: rgba(26, 77, 40, 0.05);
+}
+
+.drop-zone--active {
+  border-color: var(--accent);
+  background: rgba(26, 77, 40, 0.08);
+  transform: scale(1.01);
+}
+
+.drop-zone--has-file {
+  border-style: solid;
+  border-color: rgba(26, 77, 40, 0.18);
+  padding: 16px;
+}
+
+.drop-zone-input {
   width: 0.1px;
   height: 0.1px;
   opacity: 0;
@@ -633,54 +674,474 @@ h2 {
   z-index: -1;
 }
 
-.upload-input {
-  display: inline-flex;
-  padding: 10px 16px;
-  border-radius: 999px;
-  border: 1px solid var(--border);
-  background: var(--bg);
-  cursor: pointer;
-  margin: 8px 0 4px;
-  font-size: 0.875rem;
+.drop-zone-prompt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
 }
 
-.preview-image {
-  width: 100%;
-  max-height: 320px;
+.drop-zone-icon {
+  color: var(--accent);
+  opacity: 0.6;
+  margin-bottom: 4px;
+}
+
+.drop-zone-title {
+  margin: 0;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--fg);
+}
+
+.drop-zone-subtitle {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--fg-muted);
+}
+
+.drop-zone-preview {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  text-align: left;
+}
+
+.drop-zone-thumb {
+  width: 72px;
+  height: 72px;
   object-fit: cover;
-  border-radius: var(--radius);
+  border-radius: 10px;
   border: 1px solid var(--border);
-  margin-bottom: 12px;
+  flex-shrink: 0;
 }
 
-.analyze-preview-visual {
+.drop-zone-file-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.drop-zone-filename {
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: var(--fg);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.drop-zone-filesize {
+  font-size: 0.8125rem;
+  color: var(--fg-muted);
+}
+
+/* ── Analyze Actions ───────────────────────────────────── */
+.analyze-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.analyze-btn {
+  flex: 1;
+  padding: 12px 20px;
+  font-size: 0.9375rem;
+  gap: 6px;
+}
+
+.analyze-reset-btn {
+  padding: 12px 18px;
+}
+
+.analyze-error {
+  margin: 0 0 12px;
+}
+
+.btn-spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255,255,255,0.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  margin-right: 8px;
+  flex-shrink: 0;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Image Preview Card ────────────────────────────────── */
+.analyze-preview-card {
+  margin-bottom: 20px;
+}
+
+.analyze-preview-frame {
+  position: relative;
   border-radius: var(--radius);
   overflow: hidden;
-  margin-bottom: 10px;
   aspect-ratio: 16 / 10;
-  max-height: 320px;
+  background: #dce3dc;
 }
 
-.analyze-preview-visual .preview-image {
+.analyze-preview-img {
+  width: 100%;
   height: 100%;
-  max-height: none;
-  margin-bottom: 0;
-  border: none;
-  border-radius: 0;
+  object-fit: cover;
   display: block;
+  transition: filter 0.4s ease;
 }
 
-.preview-image--placeholder {
-  opacity: 0.88;
+.analyze-preview-img--placeholder {
+  opacity: 0.82;
+  filter: saturate(0.7);
 }
 
-.analyze-preview-hint {
-  margin-top: 0;
+.analyze-preview-frame--scanning .analyze-preview-img {
+  filter: brightness(0.85) saturate(1.1);
 }
 
-.analysis-result p {
-  margin: 8px 0;
+/* ── Scanner Overlay ───────────────────────────────────── */
+.scanner-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.scanner-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, rgba(34, 197, 94, 0.9), rgba(34, 197, 94, 0.6), transparent);
+  box-shadow: 0 0 20px rgba(34, 197, 94, 0.5), 0 0 60px rgba(34, 197, 94, 0.2);
+  animation: scan-sweep 2.2s ease-in-out infinite;
+}
+
+@keyframes scan-sweep {
+  0%   { top: -2%; opacity: 0; }
+  10%  { opacity: 1; }
+  90%  { opacity: 1; }
+  100% { top: 100%; opacity: 0; }
+}
+
+.scanner-status {
+  position: absolute;
+  bottom: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.72);
+  backdrop-filter: blur(8px);
+  color: #fff;
+  padding: 8px 18px;
+  border-radius: 999px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.scanner-dot {
+  width: 8px;
+  height: 8px;
+  background: #22c55e;
+  border-radius: 50%;
+  animation: pulse-dot 1.2s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.4; transform: scale(0.7); }
+}
+
+/* ── Diagnosis Card ────────────────────────────────────── */
+.diagnosis-card {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+              transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.diagnosis-card--visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.diagnosis-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 20px;
+}
+
+.diagnosis-label {
+  margin: 0 0 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 0.6875rem;
+  font-weight: 600;
   color: var(--fg-muted);
+}
+
+.diagnosis-disease {
+  margin: 0 !important;
+  font-size: 1.6rem !important;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+  max-width: none;
+}
+
+.diagnosis-sciname {
+  margin: 4px 0 0;
+  font-size: 0.9rem;
+  color: var(--fg-muted);
+}
+
+/* ── Confidence Ring ───────────────────────────────────── */
+.confidence-ring-wrap {
+  position: relative;
+  width: 96px;
+  height: 96px;
+  flex-shrink: 0;
+}
+
+.confidence-ring {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.confidence-ring-progress {
+  animation: ring-fill 1.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  transition: stroke-dashoffset 1.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes ring-fill {
+  from { stroke-dashoffset: 339.29; }
+}
+
+.confidence-ring-label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.confidence-ring-label strong {
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--fg);
+}
+
+.confidence-ring-label small {
+  font-size: 0.625rem;
+  color: var(--fg-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-top: 2px;
+}
+
+/* ── Diagnosis Grid (severity, affects) ────────────────── */
+.diagnosis-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.diagnosis-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.diagnosis-field-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--fg-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.diagnosis-field-value {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--fg);
+}
+
+.severity-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 14px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.8125rem;
+  letter-spacing: 0.02em;
+  width: fit-content;
+}
+
+/* ── Diagnosis Sections (Symptoms, Management) ─────────── */
+.diagnosis-section {
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+  margin-top: 4px;
+}
+
+.diagnosis-section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 10px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.diagnosis-section-text {
+  margin: 0;
+  color: var(--fg-muted);
+  line-height: 1.65;
+  font-size: 0.9375rem;
+}
+
+.diagnosis-mgmt-list {
+  margin: 0;
+  padding: 0 0 0 22px;
+  color: var(--fg-muted);
+  line-height: 1.65;
+  font-size: 0.9375rem;
+}
+
+.diagnosis-mgmt-list li {
+  margin: 6px 0;
+  padding-left: 4px;
+}
+
+/* ── Staggered field reveal ────────────────────────────── */
+.diagnosis-card--visible .diagnosis-field--delay-1,
+.diagnosis-card--visible .diagnosis-field--delay-2,
+.diagnosis-card--visible .diagnosis-field--delay-3,
+.diagnosis-card--visible .diagnosis-field--delay-4 {
+  animation: field-fade-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.diagnosis-card--visible .diagnosis-field--delay-1 { animation-delay: 0.15s; }
+.diagnosis-card--visible .diagnosis-field--delay-2 { animation-delay: 0.3s;  }
+.diagnosis-card--visible .diagnosis-field--delay-3 { animation-delay: 0.45s; }
+.diagnosis-card--visible .diagnosis-field--delay-4 { animation-delay: 0.6s;  }
+
+@keyframes field-fade-in {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Alert Modal ───────────────────────────────────────── */
+.alert-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  animation: modal-bg-in 0.3s ease forwards;
+  padding: 20px;
+}
+
+@keyframes modal-bg-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.alert-modal {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 36px 32px;
+  max-width: 440px;
+  width: 100%;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.18);
+  text-align: center;
+  animation: modal-slide-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes modal-slide-in {
+  from { opacity: 0; transform: translateY(24px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.alert-modal-icon {
+  margin-bottom: 16px;
+}
+
+.alert-modal h3 {
+  margin: 0 0 12px;
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--fg);
+}
+
+.alert-modal-message {
+  margin: 0 0 20px;
+  color: var(--fg-muted);
+  line-height: 1.6;
+  font-size: 0.9375rem;
+}
+
+.alert-modal-tips {
+  text-align: left;
+  background: rgba(245, 158, 11, 0.06);
+  border: 1px solid rgba(245, 158, 11, 0.15);
+  border-radius: var(--radius);
+  padding: 14px 18px;
+  margin-bottom: 22px;
+}
+
+.alert-modal-tips-title {
+  margin: 0 0 8px;
+  font-weight: 600;
+  font-size: 0.8125rem;
+  color: #b45309;
+}
+
+.alert-modal-tips ul {
+  margin: 0;
+  padding: 0 0 0 18px;
+  font-size: 0.875rem;
+  color: var(--fg-muted);
+  line-height: 1.6;
+}
+
+.alert-modal-tips li {
+  margin: 3px 0;
+}
+
+.alert-modal-btn {
+  width: 100%;
+  padding: 12px;
+  font-size: 0.9375rem;
 }
 
 /* --- Authentication Navigation --- */
@@ -867,8 +1328,25 @@ h2 {
     padding: 12px 0;
   }
 
-  .analyze-layout {
+  .analyze-layout-v2 {
     grid-template-columns: 1fr;
+  }
+
+  .analyze-upload-panel {
+    position: static;
+  }
+
+  .diagnosis-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .diagnosis-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .confidence-ring-wrap {
+    align-self: center;
   }
 
   .integration-layout {
@@ -991,8 +1469,12 @@ h2 {
   .stats-grid,
   .listing-grid,
   .integration-layout,
-  .analyze-layout {
+  .analyze-layout-v2 {
     grid-template-columns: 1fr;
+  }
+
+  .analyze-upload-panel {
+    position: static;
   }
 
   .page-hero-split {

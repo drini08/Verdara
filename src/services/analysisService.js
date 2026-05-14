@@ -18,15 +18,27 @@ export async function analyzeDiseasePhoto(file) {
       const error = await response.json();
       return {
         accepted: false,
+        lowConfidence: false,
         notes: error.error || 'Analysis failed. Please try again.'
       };
     }
 
     const data = await response.json();
     
-    // Ensure all required fields are present
+    // If not accepted, pass through the rejection reason
+    if (data.accepted === false) {
+      return {
+        accepted: false,
+        lowConfidence: data.lowConfidence || false,
+        confidence: data.confidence || 0,
+        notes: data.notes || 'Analysis could not be completed.'
+      };
+    }
+
+    // Successful analysis — ensure all required fields are present
     return {
-      accepted: data.accepted !== false,
+      accepted: true,
+      lowConfidence: false,
       disease: data.disease || 'Unknown Disease',
       scientificName: data.scientificName || '',
       confidence: data.confidence || 0,
@@ -40,6 +52,7 @@ export async function analyzeDiseasePhoto(file) {
     console.error('Analysis error:', err);
     return {
       accepted: false,
+      lowConfidence: false,
       notes: 'Network error. Make sure the backend server is running on http://localhost:5000'
     };
   }
