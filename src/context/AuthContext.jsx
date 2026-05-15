@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 
 const AuthContext = createContext();
-const API_URL = 'http://localhost:5000';
+const API_URL = '';
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
@@ -24,7 +24,7 @@ export function AuthProvider({ children }) {
         mode: 'cors',
         credentials: 'include'
       });
-      
+
       if (response.ok) {
         const userData = await response.json();
         setUser(userData);

@@ -58,7 +58,7 @@ function SignupPage() {
     } catch (err) {
       console.error('Signup failed:', err);
       if (err.message.includes('Failed to fetch')) {
-        setError('Cannot connect to server. Is the backend running on http://localhost:5000?');
+        setError('Cannot connect to server. Is the backend running on ?');
       } else if (err.message.includes('already exists')) {
         setError('This username or email is already taken. Please try another.');
       } else {

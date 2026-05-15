@@ -33,7 +33,7 @@ const ListingCard = ({ listing, canInteract, onAddComment, onRefresh }) => {
   const handleDelete = async () => {
     if (!window.confirm('Are you sure you want to delete this post?')) return;
     try {
-      const response = await fetch(`http://localhost:5000/api/marketplace/posts/${listing.id}`, {
+      const response = await fetch(`/api/marketplace/posts/${listing.id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -50,7 +50,7 @@ const ListingCard = ({ listing, canInteract, onAddComment, onRefresh }) => {
   const handleComplete = async () => {
     if (!window.confirm('Mark this deal as done? It will be moved to your history.')) return;
     try {
-      const response = await fetch(`http://localhost:5000/api/marketplace/posts/${listing.id}/complete`, {
+      const response = await fetch(`/api/marketplace/posts/${listing.id}/complete`, {
         method: 'PATCH',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -67,7 +67,7 @@ const ListingCard = ({ listing, canInteract, onAddComment, onRefresh }) => {
   const handleUpdate = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch(`http://localhost:5000/api/marketplace/posts/${listing.id}`, {
+      const response = await fetch(`/api/marketplace/posts/${listing.id}`, {
         method: 'PUT',
         headers: { 
           'Content-Type': 'application/json',

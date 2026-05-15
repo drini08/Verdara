@@ -16,7 +16,7 @@ const Marketplace = () => {
   const fetchPosts = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch(`http://localhost:5000/api/marketplace/posts?status=${viewStatus}`);
+      const response = await fetch(`/api/marketplace/posts?status=${viewStatus}`);
       if (!response.ok) throw new Error('Failed to fetch posts');
       const data = await response.json();
       setListings(data);
@@ -45,7 +45,7 @@ const Marketplace = () => {
         return;
       }
 
-      const response = await fetch('http://localhost:5000/api/marketplace/posts', {
+      const response = await fetch('/api/marketplace/posts', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -83,7 +83,7 @@ const Marketplace = () => {
         return;
       }
 
-      const response = await fetch(`http://localhost:5000/api/marketplace/posts/${postId}/comments`, {
+      const response = await fetch(`/api/marketplace/posts/${postId}/comments`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',

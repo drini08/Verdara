@@ -1,6 +1,6 @@
 // Marketplace service: fetch real listings from the backend (no mock data)
 
-const API_URL = 'http://localhost:5000';
+const API_URL = '';
 
 export async function getMarketplaceListings() {
   const res = await fetch(`${API_URL}/api/marketplace/posts`);

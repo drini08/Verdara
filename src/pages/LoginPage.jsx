@@ -36,7 +36,7 @@ function LoginPage() {
     } catch (err) {
       console.error('Login failed:', err);
       if (err.message.includes('Failed to fetch')) {
-        setError('Cannot connect to server. Is the backend running on http://localhost:5000?');
+        setError('Cannot connect to server. Is the backend running on ?');
       } else if (err.message.includes('Invalid')) {
         setError('Invalid email or password. Please try again.');
       } else {

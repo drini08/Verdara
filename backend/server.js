@@ -17,10 +17,27 @@ const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:5174'],
+  origin: '*', // Allow all origins for easier multi-device access
   credentials: true
 }));
 app.use(express.json());
+
+// Global error handlers to prevent the server from crashing due to GEE or other async initialization errors
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  // Keep the server running even if GEE or Gemini initialization fails
+});
+
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception:', err);
+  // Optional: check if it's the GEE error and ignore it
+  if (err.message && err.message.includes('Earth Engine')) {
+    console.log('Handled Earth Engine initialization error. Server remains up.');
+  } else {
+    // For other errors, we might still want to exit, but for now let's keep it alive
+    console.log('Server continuing after uncaught exception.');
+  }
+});
 
 // Upload configuration
 const storage = multer.memoryStorage();
