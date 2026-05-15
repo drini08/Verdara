@@ -40,7 +40,7 @@ function AppContent() {
         )}
         <footer className="footer-band">
           <div className="container footer-band-inner">
-            <p className="footer-brand">Verdara Drini</p>
+            <p className="footer-brand">Verdara</p>
             <p>
               Building smarter agriculture for farmers, municipalities, and
               institutions.
