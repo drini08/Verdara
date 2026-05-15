@@ -8,6 +8,7 @@ import { signup, login, getUserById, getUserAnalysisHistory, saveAnalysisResult 
 import { authMiddleware, optionalAuthMiddleware } from './auth.js';
 import { analyzeCropImage } from './analysisEngine.js';
 import { getMarketplacePosts, createMarketplacePost, addComment, getPostComments, updateMarketplacePost, deletePost, markPostAsCompleted } from './marketplace.js';
+import { submitFarmerReport, analyzeRegionIntelligence } from './communityIntelligence.js';
 
 dotenv.config();
 
@@ -188,6 +189,30 @@ app.patch('/api/marketplace/posts/:id/complete', authMiddleware, async (req, res
     } else {
       res.status(403).json({ error: 'Not authorized or post not found' });
     }
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Community Intelligence routes
+app.post('/api/intelligence/reports', optionalAuthMiddleware, async (req, res) => {
+  try {
+    const { location, cropType, issueDescription } = req.body;
+    if (!location || !issueDescription) {
+      return res.status(400).json({ error: 'Location and issue description are required.' });
+    }
+    const reportId = await submitFarmerReport(location, cropType, issueDescription);
+    res.status(201).json({ message: 'Report submitted successfully', id: reportId });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/intelligence/analysis', async (req, res) => {
+  try {
+    const region = req.query.region || 'global';
+    const intelligence = await analyzeRegionIntelligence(region);
+    res.json(intelligence);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

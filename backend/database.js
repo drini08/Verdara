@@ -75,6 +75,17 @@ export function initializeDatabase() {
         FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
       )
     `);
+
+    // Farmer reports table (Community Intelligence)
+    db.run(`
+      CREATE TABLE IF NOT EXISTS farmer_reports (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        location TEXT NOT NULL,
+        cropType TEXT,
+        issueDescription TEXT NOT NULL,
+        createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
   });
 }
 
