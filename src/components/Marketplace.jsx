@@ -104,7 +104,7 @@ const Marketplace = () => {
   };
 
   return (
-    <div className="marketplace" style={{ padding: '20px', maxWidth: '1400px', margin: '0 auto' }}>
+    <div className="container marketplace-section" style={{ paddingTop: '20px' }}>
       <header style={{ marginBottom: '30px', borderBottom: '2px solid #eee', paddingBottom: '20px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
