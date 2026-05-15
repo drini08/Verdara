@@ -1,16 +1,27 @@
-import sqlite3 from 'sqlite3';
-import path from 'path';
+import dotenv from 'dotenv';
+import { initializeDatabase, getCollection } from './database.js';
 
-const dbPath = path.resolve('verdara.db');
-const db = new sqlite3.Database(dbPath);
+dotenv.config();
 
-db.all("PRAGMA table_info(users)", [], (err, rows) => {
-  if (err) console.error(err);
-  else console.log('USERS TABLE COLUMNS:', rows.map(r => r.name));
-  
-  db.all("PRAGMA table_info(marketplace_posts)", [], (err, rows) => {
-    if (err) console.error(err);
-    else console.log('MARKETPLACE_POSTS TABLE COLUMNS:', rows.map(r => r.name));
-    db.close();
+async function main() {
+  await initializeDatabase();
+
+  const [users, analysisHistory, posts, comments] = await Promise.all([
+    getCollection('users'),
+    getCollection('analysisHistory'),
+    getCollection('marketplacePosts'),
+    getCollection('marketplaceComments')
+  ]);
+
+  console.log('FIREBASE ROOT NODES:', {
+    users: users.length,
+    analysisHistoryUsers: analysisHistory.length,
+    marketplacePosts: posts.length,
+    marketplaceCommentThreads: comments.length
   });
+}
+
+main().catch((err) => {
+  console.error('Schema check failed:', err.message);
+  process.exit(1);
 });

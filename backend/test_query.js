@@ -1,28 +1,14 @@
-import sqlite3 from 'sqlite3';
-import path from 'path';
+import dotenv from 'dotenv';
+import { getMarketplacePosts } from './marketplace.js';
 
-const dbPath = path.resolve('verdara.db');
-const db = new sqlite3.Database(dbPath);
+dotenv.config();
 
-const query = `
-    SELECT
-      mp.*,
-      u.username,
-      u.email,
-      u.location AS userProfileLocation,
-      COUNT(mc.id) as commentCount
-    FROM marketplace_posts mp
-    JOIN users u ON mp.userId = u.id
-    LEFT JOIN marketplace_comments mc ON mp.id = mc.postId
-    GROUP BY mp.id
-    ORDER BY mp.createdAt DESC
-`;
+async function main() {
+  const posts = await getMarketplacePosts('active');
+  console.log('QUERY SUCCESS:', posts.length, 'rows');
+}
 
-db.all(query, [], (err, rows) => {
-  if (err) {
-    console.error('QUERY FAILED:', err);
-  } else {
-    console.log('QUERY SUCCESS:', rows.length, 'rows');
-  }
-  db.close();
+main().catch((err) => {
+  console.error('QUERY FAILED:', err.message);
+  process.exit(1);
 });

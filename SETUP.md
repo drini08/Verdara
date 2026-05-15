@@ -84,6 +84,10 @@ SQLite database is automatically initialized when the backend starts. The databa
 PORT=5000
 JWT_SECRET=your_secret_key_here
 NODE_ENV=development
+GEMINI_API_KEY=your_api_key_here
+# or, for Vertex AI
+GOOGLE_CLOUD_PROJECT=your_project_id
+GOOGLE_CLOUD_LOCATION=us-central1
 ```
 
 ## Technologies Used

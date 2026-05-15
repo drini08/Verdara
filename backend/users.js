@@ -1,6 +1,9 @@
-import { getAsync, runAsync, allAsync } from './database.js';
 import bcrypt from 'bcryptjs';
 import { generateToken } from './auth.js';
+import { getCollection, getRecord, pushRecord } from './database.js';
+
+const USERS_PATH = 'users';
+const ANALYSIS_HISTORY_PATH = 'analysisHistory';
 
 export async function signup(username, email, password) {
   // Validate inputs
@@ -12,11 +15,8 @@ export async function signup(username, email, password) {
     throw new Error('Password must be at least 6 characters');
   }
 
-  // Check if user exists
-  const existing = await getAsync(
-    'SELECT * FROM users WHERE username = ? OR email = ?',
-    [username, email]
-  );
+  const existingUsers = await getCollection(USERS_PATH);
+  const existing = existingUsers.find((user) => user.username === username || user.email === email);
 
   if (existing) {
     throw new Error('Username or email already exists');
@@ -25,14 +25,20 @@ export async function signup(username, email, password) {
   // Hash password
   const hashedPassword = await bcrypt.hash(password, 10);
 
-  // Create user
-  const result = await runAsync(
-    'INSERT INTO users (username, email, password) VALUES (?, ?, ?)',
-    [username, email, hashedPassword]
-  );
+  const userId = await pushRecord(USERS_PATH, {
+    username,
+    email,
+    password: hashedPassword,
+    location: null,
+    createdAt: new Date().toISOString()
+  });
 
-  const token = generateToken(result.lastID);
-  return { id: result.lastID, username, email, token };
+  if (!userId) {
+    throw new Error('Failed to create user');
+  }
+
+  const token = generateToken(userId);
+  return { id: userId, username, email, token };
 }
 
 export async function login(email, password) {
@@ -41,11 +47,8 @@ export async function login(email, password) {
     throw new Error('Email and password are required');
   }
 
-  // Find user
-  const user = await getAsync(
-    'SELECT * FROM users WHERE email = ?',
-    [email]
-  );
+  const users = await getCollection(USERS_PATH);
+  const user = users.find((entry) => entry.email === email);
 
   if (!user) {
     throw new Error('Invalid email or password');
@@ -62,33 +65,45 @@ export async function login(email, password) {
 }
 
 export async function getUserById(userId) {
-  const user = await getAsync(
-    'SELECT id, username, email, createdAt FROM users WHERE id = ?',
-    [userId]
-  );
-  return user || null;
+  const user = await getRecord(`${USERS_PATH}/${userId}`);
+  if (!user) {
+    return null;
+  }
+
+  const { password, ...safeUser } = user;
+  return {
+    id: safeUser.id ?? userId,
+    username: safeUser.username,
+    email: safeUser.email,
+    createdAt: safeUser.createdAt
+  };
 }
 
 export async function getUserAnalysisHistory(userId) {
-  const history = await allAsync(
-    'SELECT * FROM analysis_history WHERE userId = ? ORDER BY createdAt DESC',
-    [userId]
-  );
-  return history || [];
+  const history = await getCollection(`${ANALYSIS_HISTORY_PATH}/${userId}`);
+  return history.sort((left, right) => new Date(right.createdAt ?? 0) - new Date(left.createdAt ?? 0));
 }
 
 export async function saveAnalysisResult(userId, analysisData) {
-  const result = await runAsync(
-    `INSERT INTO analysis_history (userId, imageName, disease, severity, confidence, notes)
-     VALUES (?, ?, ?, ?, ?, ?)`,
-    [
-      userId,
-      analysisData.imageName,
-      analysisData.disease,
-      analysisData.severity,
-      analysisData.confidence,
-      analysisData.notes
-    ]
-  );
-  return result;
+  if (!userId) {
+    return null;
+  }
+
+  const existingUser = await getRecord(`${USERS_PATH}/${userId}`);
+  if (!existingUser) {
+    return null;
+  }
+
+  const record = {
+    userId,
+    imageName: analysisData.imageName,
+    disease: analysisData.disease,
+    severity: analysisData.severity,
+    confidence: analysisData.confidence,
+    notes: analysisData.notes,
+    createdAt: new Date().toISOString()
+  };
+
+  const recordId = await pushRecord(`${ANALYSIS_HISTORY_PATH}/${userId}`, record);
+  return { id: recordId, ...record };
 }

@@ -1,4 +1,6 @@
-const API_ENDPOINT = "http://localhost:5000/api/analyze-disease";
+import { apiUrl, API_URL } from '../config/api';
+
+const API_ENDPOINT = apiUrl('/api/analyze-disease');
 
 export async function analyzeDiseasePhoto(file) {
   try {
@@ -53,7 +55,7 @@ export async function analyzeDiseasePhoto(file) {
     return {
       accepted: false,
       lowConfidence: false,
-      notes: 'Network error. Make sure the backend server is running on http://localhost:5000'
+      notes: `Network error. Make sure the backend server is running on ${API_URL}`
     };
   }
 }

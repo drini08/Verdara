@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { API_URL } from '../config/api';
 
 function LoginPage() {
   const { login, isLoading: authLoading } = useAuth();
@@ -36,7 +37,7 @@ function LoginPage() {
     } catch (err) {
       console.error('Login failed:', err);
       if (err.message.includes('Failed to fetch')) {
-        setError('Cannot connect to server. Is the backend running on http://localhost:5000?');
+        setError(`Cannot connect to server. Is the backend running on ${API_URL}?`);
       } else if (err.message.includes('Invalid')) {
         setError('Invalid email or password. Please try again.');
       } else {

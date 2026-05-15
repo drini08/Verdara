@@ -1,0 +1,2 @@
+Verdara is an AI-driven agricultural intelligence platform that uses satellite imagery, weather data, computer vision, and predictive analytics to monitor crops, forecast risks, and optimize agricultural operations. The platform also includes a digital marketplace connecting farmers with buyers and suppliers, creating a smarter and more connected agricultural ecosystem.
+

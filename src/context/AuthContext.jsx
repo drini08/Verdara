@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
+import { apiUrl } from '../config/api';
 
 const AuthContext = createContext();
-const API_URL = 'http://localhost:5000';
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
@@ -19,7 +19,7 @@ export function AuthProvider({ children }) {
 
   async function verifyToken(authToken) {
     try {
-      const response = await fetch(`${API_URL}/api/auth/user`, {
+      const response = await fetch(apiUrl('/api/auth/user'), {
         headers: { Authorization: `Bearer ${authToken}` },
         mode: 'cors',
         credentials: 'include'
@@ -42,7 +42,7 @@ export function AuthProvider({ children }) {
 
   async function signup(username, email, password) {
     try {
-      const response = await fetch(`${API_URL}/api/auth/signup`, {
+      const response = await fetch(apiUrl('/api/auth/signup'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, email, password }),
@@ -68,7 +68,7 @@ export function AuthProvider({ children }) {
 
   async function login(email, password) {
     try {
-      const response = await fetch(`${API_URL}/api/auth/login`, {
+      const response = await fetch(apiUrl('/api/auth/login'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),

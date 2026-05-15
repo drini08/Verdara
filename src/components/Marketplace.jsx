@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import ListingCard from './ListingCard';
 import CreatePostModal from './CreatePostModal';
-import { useAuth } from '../context/AuthContext'; 
+import { useAuth } from '../context/AuthContext';
+import { apiUrl } from '../config/api'; 
 
 const Marketplace = () => {
   const { isLoggedIn, user, token } = useAuth();
@@ -16,7 +17,7 @@ const Marketplace = () => {
   const fetchPosts = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch(`http://localhost:5000/api/marketplace/posts?status=${viewStatus}`);
+      const response = await fetch(apiUrl(`/api/marketplace/posts?status=${viewStatus}`));
       if (!response.ok) throw new Error('Failed to fetch posts');
       const data = await response.json();
       setListings(data);
@@ -45,7 +46,7 @@ const Marketplace = () => {
         return;
       }
 
-      const response = await fetch('http://localhost:5000/api/marketplace/posts', {
+      const response = await fetch(apiUrl('/api/marketplace/posts'), {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -83,7 +84,7 @@ const Marketplace = () => {
         return;
       }
 
-      const response = await fetch(`http://localhost:5000/api/marketplace/posts/${postId}/comments`, {
+      const response = await fetch(apiUrl(`/api/marketplace/posts/${postId}/comments`), {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',

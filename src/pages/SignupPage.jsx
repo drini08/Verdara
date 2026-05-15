@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { API_URL } from '../config/api';
 
 function SignupPage() {
   const { signup, isLoading: authLoading } = useAuth();
@@ -58,7 +59,7 @@ function SignupPage() {
     } catch (err) {
       console.error('Signup failed:', err);
       if (err.message.includes('Failed to fetch')) {
-        setError('Cannot connect to server. Is the backend running on http://localhost:5000?');
+        setError(`Cannot connect to server. Is the backend running on ${API_URL}?`);
       } else if (err.message.includes('already exists')) {
         setError('This username or email is already taken. Please try another.');
       } else {

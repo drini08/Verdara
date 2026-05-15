@@ -2,16 +2,14 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import multer from 'multer';
-import path from 'path';
-import { fileURLToPath } from 'url';
 import { signup, login, getUserById, getUserAnalysisHistory, saveAnalysisResult } from './users.js';
 import { authMiddleware, optionalAuthMiddleware } from './auth.js';
 import { analyzeCropImage } from './analysisEngine.js';
 import { getMarketplacePosts, createMarketplacePost, addComment, getPostComments, updateMarketplacePost, deletePost, markPostAsCompleted } from './marketplace.js';
+import { initializeDatabase } from './database.js';
 
 dotenv.config();
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 const PORT = process.env.PORT || 5000;
 
@@ -199,7 +197,17 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Internal server error' });
 });
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`🚀 Verdara backend running on http://localhost:${PORT}`);
-});
+async function startServer() {
+  try {
+    await initializeDatabase();
+
+    app.listen(PORT, () => {
+      console.log(`🚀 Verdara backend running on http://localhost:${PORT}`);
+    });
+  } catch (err) {
+    console.error('Failed to start Verdara backend:', err.message);
+    process.exit(1);
+  }
+}
+
+startServer();
