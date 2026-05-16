@@ -3,6 +3,7 @@ import { useAuth } from "../../context/AuthContext";
 const navItems = [
   { label: "Home", href: "/" },
   { label: "Intelligence", href: "/intelligence" },
+  { label: "Community", href: "/community" },
   { label: "Marketplace", href: "/marketplace" },
   { label: "Integration", href: "/integration" },
   { label: "Analyze", href: "/analyze" }

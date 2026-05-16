@@ -8,7 +8,7 @@ import { signup, login, getUserById, getUserAnalysisHistory, saveAnalysisResult 
 import { authMiddleware, optionalAuthMiddleware } from './auth.js';
 import { analyzeCropImage } from './analysisEngine.js';
 import { getMarketplacePosts, createMarketplacePost, addComment, getPostComments, updateMarketplacePost, deletePost, markPostAsCompleted } from './marketplace.js';
-import { submitFarmerReport, analyzeRegionIntelligence } from './communityIntelligence.js';
+import { submitFarmerReport, analyzeRegionIntelligence, getAllFarmerReports, getUserReports, updateFarmerReport, deleteFarmerReport } from './communityIntelligence.js';
 
 dotenv.config();
 
@@ -18,7 +18,7 @@ const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:5174'],
+  origin: true, // Reflect request origin (allows any origin to access the API in dev)
   credentials: true
 }));
 app.use(express.json());
@@ -201,8 +201,55 @@ app.post('/api/intelligence/reports', optionalAuthMiddleware, async (req, res) =
     if (!location || !issueDescription) {
       return res.status(400).json({ error: 'Location and issue description are required.' });
     }
-    const reportId = await submitFarmerReport(location, cropType, issueDescription);
+    const reportId = await submitFarmerReport(location, cropType, issueDescription, req.userId);
     res.status(201).json({ message: 'Report submitted successfully', id: reportId });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/intelligence/my-reports', authMiddleware, async (req, res) => {
+  try {
+    const reports = await getUserReports(req.userId);
+    res.json(reports);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/intelligence/reports', async (req, res) => {
+  try {
+    const reports = await getAllFarmerReports();
+    res.json(reports);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.put('/api/intelligence/reports/:id', authMiddleware, async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    const { location, cropType, issueDescription } = req.body;
+    const success = await updateFarmerReport(id, req.userId, location, cropType, issueDescription);
+    if (success) {
+      res.json({ message: 'Report updated successfully' });
+    } else {
+      res.status(403).json({ error: 'Not authorized or report not found' });
+    }
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/intelligence/reports/:id', authMiddleware, async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    const success = await deleteFarmerReport(id, req.userId);
+    if (success) {
+      res.json({ message: 'Report deleted successfully' });
+    } else {
+      res.status(403).json({ error: 'Not authorized or report not found' });
+    }
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

@@ -6,6 +6,7 @@ import IntegrationPage from "./pages/IntegrationPage";
 import AnalyzePage from "./pages/AnalyzePage";
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
+import CommunityIntelligencePage from "./pages/CommunityIntelligencePage";
 import { AuthProvider } from "./context/AuthContext";
 
 const routes = {
@@ -14,6 +15,7 @@ const routes = {
   "/marketplace": MarketplacePage,
   "/integration": IntegrationPage,
   "/analyze": AnalyzePage,
+  "/community": CommunityIntelligencePage,
   "/login": LoginPage,
   "/signup": SignupPage
 };

@@ -12,12 +12,12 @@ const ai = new GoogleGenAI({
 /**
  * Submit a new anonymous farmer report to the community intelligence database.
  */
-export async function submitFarmerReport(location, cropType, issueDescription) {
+export async function submitFarmerReport(location, cropType, issueDescription, userId = null) {
   const query = `
-    INSERT INTO farmer_reports (location, cropType, issueDescription)
-    VALUES (?, ?, ?)
+    INSERT INTO farmer_reports (location, cropType, issueDescription, userId)
+    VALUES (?, ?, ?, ?)
   `;
-  const result = await runAsync(query, [location, cropType, issueDescription]);
+  const result = await runAsync(query, [location, cropType, issueDescription, userId]);
   return result.lastID;
 }
 
@@ -97,4 +97,55 @@ Return structured JSON ONLY:
     console.error('Error analyzing community reports:', err);
     throw new Error('Failed to analyze community intelligence data.');
   }
+}
+
+/**
+ * Fetch all recent farmer reports from the database.
+ */
+export async function getAllFarmerReports() {
+  const query = `
+    SELECT * FROM farmer_reports 
+    ORDER BY createdAt DESC 
+    LIMIT 50
+  `;
+  const reports = await allAsync(query);
+  return reports;
+}
+
+/**
+ * Fetch all reports submitted by a specific user.
+ */
+export async function getUserReports(userId) {
+  const query = `
+    SELECT * FROM farmer_reports 
+    WHERE userId = ?
+    ORDER BY createdAt DESC
+  `;
+  const reports = await allAsync(query, [userId]);
+  return reports;
+}
+
+/**
+ * Update an existing report (only if the user is the owner).
+ */
+export async function updateFarmerReport(id, userId, location, cropType, issueDescription) {
+  const query = `
+    UPDATE farmer_reports 
+    SET location = ?, cropType = ?, issueDescription = ?
+    WHERE id = ? AND userId = ?
+  `;
+  const result = await runAsync(query, [location, cropType, issueDescription, id, userId]);
+  return result.changes > 0;
+}
+
+/**
+ * Delete a report (only if the user is the owner).
+ */
+export async function deleteFarmerReport(id, userId) {
+  const query = `
+    DELETE FROM farmer_reports 
+    WHERE id = ? AND userId = ?
+  `;
+  const result = await runAsync(query, [id, userId]);
+  return result.changes > 0;
 }

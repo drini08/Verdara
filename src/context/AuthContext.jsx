@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 
 const AuthContext = createContext();
-const API_URL = 'http://localhost:5000';
+const API_URL = ''; // Relative paths are handled by the proxy
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);

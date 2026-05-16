@@ -80,10 +80,12 @@ export function initializeDatabase() {
     db.run(`
       CREATE TABLE IF NOT EXISTS farmer_reports (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
+        userId INTEGER,
         location TEXT NOT NULL,
         cropType TEXT,
         issueDescription TEXT NOT NULL,
-        createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
+        createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (userId) REFERENCES users(id) ON DELETE SET NULL
       )
     `);
   });
