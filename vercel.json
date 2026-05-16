@@ -1,12 +1,21 @@
 {
-    "experimentalServices": {
-        "frontend": {
-            "routePrefix": "/",
-            "framework": "vite"
-        },
-        "backend": {
-            "entrypoint": "backend",
-            "routePrefix": "/_/backend"
+    "version": 2,
+    "buildCommand": "npm run build",
+    "outputDirectory": "dist",
+    "functions": {
+        "api/**/*.js": {
+            "runtime": "nodejs20.x",
+            "maxDuration": 10
         }
-    }
+    },
+    "rewrites": [
+        {
+            "source": "/api/(.*)",
+            "destination": "/api/$1"
+        },
+        {
+            "source": "/(.*)",
+            "destination": "/index.html"
+        }
+    ]
 }
