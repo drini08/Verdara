@@ -2,7 +2,6 @@ import dotenv from "dotenv";
 dotenv.config();
 import sharp from 'sharp';
 import { GoogleGenAI } from '@google/genai';
-import { saveAnalysisResult } from './users.js';
 
 let aiClient;
 
@@ -184,8 +183,6 @@ Provide the response strictly as a JSON object matching this schema:
         : `Analysis complete — ${data.disease} detected with ${parseFloat((confidence * 100).toFixed(1))}% confidence.`,
       imageName
     };
-
-    await saveAnalysisResult(imageName, result);
 
     return result;
   } catch (err) {
