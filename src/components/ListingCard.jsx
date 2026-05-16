@@ -7,6 +7,10 @@ const ListingCard = ({ listing, canInteract, onAddComment, onRefresh }) => {
   const [commentText, setCommentText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [confirmDealDone, setConfirmDealDone] = useState(false);
+  const [isCompleting, setIsCompleting] = useState(false);
+  const [dealMessage, setDealMessage] = useState('');
+  const [dealError, setDealError] = useState('');
   const [editForm, setEditForm] = useState({
     title: listing.title,
     description: listing.description,
@@ -49,19 +53,25 @@ const ListingCard = ({ listing, canInteract, onAddComment, onRefresh }) => {
   };
 
   const handleComplete = async () => {
-    if (!window.confirm('Mark this deal as done? It will be moved to your history.')) return;
+    setIsCompleting(true);
+    setDealError('');
     try {
       const response = await fetch(apiUrl(`/api/marketplace/posts/${listing.id}/complete`), {
         method: 'PATCH',
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (response.ok) {
+        setDealMessage('Deal marked as done. Moving it to history...');
+        setConfirmDealDone(false);
         onRefresh();
       } else {
-        alert('Failed to complete post');
+        setDealError('Failed to complete post');
       }
     } catch (err) {
       console.error('Complete error:', err);
+      setDealError('Failed to complete post. Please try again.');
+    } finally {
+      setIsCompleting(false);
     }
   };
 
@@ -165,12 +175,34 @@ const ListingCard = ({ listing, canInteract, onAddComment, onRefresh }) => {
 
       {isOwner && listing.status === 'active' && (
         <button 
-          onClick={handleComplete}
+          onClick={() => {
+            setConfirmDealDone(true);
+            setDealMessage('');
+            setDealError('');
+          }}
           style={{ width: '100%', padding: '8px', marginTop: '10px', backgroundColor: '#6f42c1', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
         >
           ✅ Deal Done
         </button>
       )}
+
+      {confirmDealDone && (
+        <div className="marketplace-confirm-panel">
+          <strong>Mark this deal as done?</strong>
+          <p>It will move from active deals into your history.</p>
+          <div>
+            <button type="button" onClick={handleComplete} disabled={isCompleting}>
+              {isCompleting ? 'Saving...' : 'Confirm'}
+            </button>
+            <button type="button" onClick={() => setConfirmDealDone(false)} disabled={isCompleting}>
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      {dealMessage && <p className="marketplace-card-status">{dealMessage}</p>}
+      {dealError && <p className="marketplace-card-error">{dealError}</p>}
 
       <div className="comments" style={{ background: '#f9f9f9', padding: '10px', marginTop: '15px', borderRadius: '6px' }}>
         <label style={{ display: 'block', marginBottom: '8px' }}>

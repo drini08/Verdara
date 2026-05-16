@@ -5,6 +5,7 @@ import multer from 'multer';
 import { signup, login, getUserById, getUserAnalysisHistory, saveAnalysisResult } from './users.js';
 import { authMiddleware, optionalAuthMiddleware } from './auth.js';
 import { analyzeCropImage } from './analysisEngine.js';
+import { analyzeFieldPolygon } from './fieldAnalysis.js';
 import { getMarketplacePosts, createMarketplacePost, addComment, getPostComments, updateMarketplacePost, deletePost, markPostAsCompleted } from './marketplace.js';
 import { initializeDatabase } from './database.js';
 
@@ -104,6 +105,15 @@ app.get('/api/analysis-history', authMiddleware, async (req, res) => {
     res.json(history);
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/gee/analyze', async (req, res) => {
+  try {
+    const result = await analyzeFieldPolygon(req.body?.polygon, { crop: req.body?.crop });
+    res.json(result);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
   }
 });
 

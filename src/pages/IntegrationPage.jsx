@@ -1,4 +1,5 @@
 import DataIntegrationSection from "../components/sections/DataIntegrationSection";
+import FieldIntelligenceMap from "../components/sections/FieldIntelligenceMap";
 import { pageHeroImages } from "../data/images";
 
 function IntegrationPage() {
@@ -23,6 +24,7 @@ function IntegrationPage() {
           </div>
         </div>
       </section>
+      <FieldIntelligenceMap />
       <DataIntegrationSection />
     </>
   );

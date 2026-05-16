@@ -84,10 +84,22 @@ SQLite database is automatically initialized when the backend starts. The databa
 PORT=5000
 JWT_SECRET=your_secret_key_here
 NODE_ENV=development
-GEMINI_API_KEY=your_api_key_here
+OPENAI_API_KEY=your_openai_api_key_here
+OPENAI_MODEL=gpt-5-mini
 # or, for Vertex AI
 GOOGLE_CLOUD_PROJECT=your_project_id
 GOOGLE_CLOUD_LOCATION=us-central1
+
+# Field intelligence / satellite analysis
+# Simple mode uses OPENAI_API_KEY for field recommendations.
+# Set ENABLE_EARTH_ENGINE=true only after adding service-account credentials.
+ENABLE_EARTH_ENGINE=false
+```
+
+### Frontend (.env)
+```
+VITE_API_URL=http://localhost:5000
+VITE_GOOGLE_MAPS_API_KEY=your_google_maps_api_key_here
 ```
 
 ## Technologies Used
