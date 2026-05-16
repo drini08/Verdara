@@ -6,6 +6,7 @@ import { signup, login, getUserById, getUserAnalysisHistory, saveAnalysisResult 
 import { authMiddleware, optionalAuthMiddleware } from './auth.js';
 import { analyzeCropImage } from './analysisEngine.js';
 import { analyzeFieldPolygon } from './fieldAnalysis.js';
+import { getWeatherRisk } from './weatherService.js';
 import { getMarketplacePosts, createMarketplacePost, addComment, getPostComments, updateMarketplacePost, deletePost, markPostAsCompleted } from './marketplace.js';
 import { initializeDatabase } from './database.js';
 
@@ -114,6 +115,15 @@ app.post('/api/gee/analyze', async (req, res) => {
     res.json(result);
   } catch (err) {
     res.status(400).json({ error: err.message });
+  }
+});
+
+app.get('/api/weather/field', async (req, res) => {
+  try {
+    const weather = await getWeatherRisk(req.query);
+    res.json(weather);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 

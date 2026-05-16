@@ -3,6 +3,7 @@ import {
   getSatelliteSummary
 } from "../../services/intelligenceService";
 import { useReveal } from "../../hooks/useReveal";
+import WeatherRiskCard from "./WeatherRiskCard";
 
 function IntelligenceSection() {
   const alerts = getDiseaseAlerts();
@@ -35,25 +36,28 @@ function IntelligenceSection() {
           </article>
         </div>
 
-        <div
-          className={`table-card reveal ${visible ? "is-visible" : ""}`}
-          style={{ transitionDelay: visible ? "120ms" : undefined }}
-        >
-          <h3>Detected disease alerts</h3>
-          <div className="table-head">
-            <span>Zone</span>
-            <span>Disease</span>
-            <span>Confidence</span>
-            <span>Risk</span>
-          </div>
-          {alerts.map((alert) => (
-            <div className="table-row" key={`${alert.zone}-${alert.disease}`}>
-              <span>{alert.zone}</span>
-              <span>{alert.disease}</span>
-              <span>{alert.confidence}%</span>
-              <span className={`risk risk-${alert.risk}`}>{alert.risk}</span>
+        <div className="intelligence-grid">
+          <div
+            className={`table-card reveal ${visible ? "is-visible" : ""}`}
+            style={{ transitionDelay: visible ? "120ms" : undefined }}
+          >
+            <h3>Detected disease alerts</h3>
+            <div className="table-head">
+              <span>Zone</span>
+              <span>Disease</span>
+              <span>Confidence</span>
+              <span>Risk</span>
             </div>
-          ))}
+            {alerts.map((alert) => (
+              <div className="table-row" key={`${alert.zone}-${alert.disease}`}>
+                <span>{alert.zone}</span>
+                <span>{alert.disease}</span>
+                <span>{alert.confidence}%</span>
+                <span className={`risk risk-${alert.risk}`}>{alert.risk}</span>
+              </div>
+            ))}
+          </div>
+          <WeatherRiskCard />
         </div>
       </div>
     </section>

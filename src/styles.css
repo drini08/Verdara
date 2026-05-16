@@ -502,6 +502,106 @@ h2 {
   color: #8a6a1e;
 }
 
+.intelligence-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(300px, 0.8fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.weather-risk-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--bg-elevated);
+  box-shadow: var(--shadow-sm);
+  padding: 22px;
+}
+
+.weather-risk-card h3 {
+  margin: 0 0 16px;
+  font-size: 1.1rem;
+}
+
+.weather-location-search {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.weather-location-search input {
+  flex: 1;
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-family: inherit;
+  font-size: 0.9rem;
+  padding: 10px 11px;
+}
+
+.weather-location-search input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(26, 77, 40, 0.1);
+}
+
+.weather-location-search button {
+  border: 0;
+  border-radius: var(--radius);
+  background: var(--accent);
+  color: #ffffff;
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 600;
+  padding: 10px 13px;
+}
+
+.weather-location-search button:disabled {
+  cursor: not-allowed;
+  opacity: 0.56;
+}
+
+.weather-risk-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.weather-risk-grid div {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: #fbfcfa;
+  padding: 12px;
+}
+
+.weather-risk-grid span {
+  display: block;
+  color: var(--fg-muted);
+  font-size: 0.78rem;
+}
+
+.weather-risk-grid strong {
+  display: block;
+  margin-top: 5px;
+  font-size: 1.15rem;
+}
+
+.weather-risk-list {
+  display: grid;
+  gap: 8px;
+}
+
+.weather-risk-list p {
+  margin: 0;
+  border-left: 3px solid var(--accent);
+  background: var(--accent-soft);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  color: var(--fg-muted);
+  font-size: 0.9rem;
+  line-height: 1.45;
+  padding: 9px 10px;
+}
+
 .listing-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1733,6 +1833,10 @@ h2 {
     grid-template-columns: 1fr;
   }
 
+  .weather-location-search {
+    flex-direction: column;
+  }
+
   .auth-card {
     padding: 20px;
     margin: 0 12px;
@@ -1856,6 +1960,7 @@ h2 {
 
   .stats-grid,
   .listing-grid,
+  .intelligence-grid,
   .integration-layout,
   .field-intelligence-layout,
   .analyze-layout-v2 {
