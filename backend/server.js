@@ -202,7 +202,7 @@ async function startServer() {
     await initializeDatabase();
 
     app.listen(PORT, () => {
-      console.log(`🚀 Verdara backend running on http://localhost:${PORT}`);
+      console.log(`Verdara backend running on http://localhost:${PORT}`);
     });
   } catch (err) {
     console.error('Failed to start Verdara backend:', err.message);
