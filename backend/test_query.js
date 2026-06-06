@@ -1,7 +1,5 @@
-import dotenv from 'dotenv';
+import './env.js';
 import { getMarketplacePosts } from './marketplace.js';
-
-dotenv.config();
 
 async function main() {
   const posts = await getMarketplacePosts('active');

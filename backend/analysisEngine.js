@@ -1,5 +1,4 @@
-import dotenv from "dotenv";
-dotenv.config();
+import './env.js';
 import sharp from 'sharp';
 import { GoogleGenAI } from '@google/genai';
 

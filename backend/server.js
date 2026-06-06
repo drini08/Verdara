@@ -1,6 +1,6 @@
+import './env.js';
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
 import multer from 'multer';
 import { signup, login, getUserById, getUserAnalysisHistory, saveAnalysisResult } from './users.js';
 import { authMiddleware, optionalAuthMiddleware } from './auth.js';
@@ -9,8 +9,6 @@ import { analyzeFieldPolygon } from './fieldAnalysis.js';
 import { getWeatherRisk } from './weatherService.js';
 import { getMarketplacePosts, createMarketplacePost, addComment, getPostComments, updateMarketplacePost, deletePost, markPostAsCompleted } from './marketplace.js';
 import { initializeDatabase } from './database.js';
-
-dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -111,9 +109,21 @@ app.get('/api/analysis-history', authMiddleware, async (req, res) => {
 
 app.post('/api/gee/analyze', async (req, res) => {
   try {
+    console.log('[api] /api/gee/analyze request received', {
+      crop: req.body?.crop || null,
+      pointCount: Array.isArray(req.body?.polygon) ? req.body.polygon.length : 0
+    });
     const result = await analyzeFieldPolygon(req.body?.polygon, { crop: req.body?.crop });
+    console.log('[api] /api/gee/analyze request succeeded', {
+      crop: result.crop,
+      imageCount: result.satelliteMetrics?.imageCount ?? 0,
+      healthScore: result.healthScore
+    });
     res.json(result);
   } catch (err) {
+    console.error('[api] /api/gee/analyze request failed', {
+      error: err.message
+    });
     res.status(400).json({ error: err.message });
   }
 });

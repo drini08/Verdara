@@ -872,6 +872,20 @@ h2 {
   min-height: 560px;
 }
 
+.field-point-marker {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 2px solid #ffffff;
+  border-radius: 999px;
+  background: #1a4d28;
+  box-shadow: 0 8px 20px rgba(20, 24, 20, 0.2);
+  color: #ffffff;
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+
 .map-empty-state {
   position: absolute;
   inset: 0;

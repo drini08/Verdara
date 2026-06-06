@@ -1,6 +1,5 @@
 import Navbar from "./components/layout/Navbar";
 import HomePage from "./pages/HomePage";
-import IntelligencePage from "./pages/IntelligencePage";
 import MarketplacePage from "./pages/MarketplacePage";
 import IntegrationPage from "./pages/IntegrationPage";
 import AnalyzePage from "./pages/AnalyzePage";
@@ -10,7 +9,6 @@ import { AuthProvider } from "./context/AuthContext";
 
 const routes = {
   "/": HomePage,
-  "/intelligence": IntelligencePage,
   "/marketplace": MarketplacePage,
   "/integration": IntegrationPage,
   "/analyze": AnalyzePage,

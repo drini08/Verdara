@@ -1,5 +1,13 @@
 import { analyzeSatellitePolygon } from './earthEngineService.js';
-import { generateOpenAiFieldAdvisory } from './openaiService.js';
+
+function logFieldAnalysis(message, details) {
+  if (details) {
+    console.log(`[field-analysis] ${message}`, details);
+    return;
+  }
+
+  console.log(`[field-analysis] ${message}`);
+}
 
 function shouldUseEarthEngine() {
   const raw = process.env.ENABLE_EARTH_ENGINE?.trim().toLowerCase();
@@ -93,36 +101,7 @@ function describeRegion(center) {
   };
 }
 
-function cropSuitability(crop, region, area) {
-  const baseScores = {
-    potato: 72,
-    wheat: 70,
-    corn: 66,
-    pepper: 62,
-    tomato: 64
-  };
-  const cropLabels = {
-    potato: 'Potato suitability',
-    wheat: 'Wheat suitability',
-    corn: 'Corn suitability',
-    pepper: 'Pepper suitability',
-    tomato: 'Tomato suitability'
-  };
-  const areaPenalty = area > 50 ? 3 : 0;
-  const score = Math.min(94, Math.max(35, baseScores[crop] + region.suitabilityBoost - areaPenalty));
-
-  return {
-    label: cropLabels[crop],
-    score,
-    explanation: `${region.label} is estimated as ${score >= 75 ? 'good' : 'moderate'} for ${crop} based on regional climate, field size, and expected water stress.`
-  };
-}
-
-function healthFromSatellite(metrics, fallbackHealthScore) {
-  if (!metrics || !metrics.imageCount) {
-    return fallbackHealthScore;
-  }
-
+function healthFromSatellite(metrics) {
   const ndviScore = Math.round((metrics.ndviMean + 0.05) * 100);
   const ndmiScore = Math.round((metrics.ndmiMean + 0.1) * 80);
   return Math.max(25, Math.min(96, Math.round((ndviScore * 0.7) + (ndmiScore * 0.3))));
@@ -155,30 +134,6 @@ function zoneFindingsFromSatellite(zones, metrics) {
   });
 }
 
-async function generateAiAdvisory({ crop, center, region, area, healthScore, zones, suitability }) {
-  try {
-    return await generateOpenAiFieldAdvisory(`You are an agronomist. Return strict JSON only.
-Analyze this selected field using location context and simulated satellite indicators until Earth Engine NDVI is connected.
-Coordinates centroid: ${center.lat}, ${center.lng}
-Region: ${region.label}
-Climate: ${region.climate}
-Area hectares: ${area.toFixed(3)}
-Crop: ${crop}
-Health score: ${healthScore}
-Zone labels: ${zones.map((zone) => zone.label).join(', ')}
-Suitability score: ${suitability.score}
-Return this schema:
-{
-  "summary": "one concise field health and crop suitability summary",
-  "recommendations": ["3 to 5 practical recommendations"],
-  "suitabilityExplanation": "one sentence"
-}`);
-  } catch (err) {
-    console.warn('OpenAI field advisory failed:', err.message);
-    return null;
-  }
-}
-
 export async function analyzeFieldPolygon(polygon, options = {}) {
   const points = assertPolygon(polygon);
   const crop = normalizeCrop(options.crop);
@@ -187,20 +142,33 @@ export async function analyzeFieldPolygon(polygon, options = {}) {
   const region = describeRegion(center);
   const smallArea = Math.max(area, 0.25);
   const baseOffset = Math.min(0.004, Math.max(0.00035, Math.sqrt(smallArea) / 6000));
-  const fallbackHealthScore = Math.max(45, Math.round(86 - Math.min(28, area * 0.15)));
-  let satelliteMetrics = null;
-  let satelliteError = null;
-
-  if (shouldUseEarthEngine()) {
-    try {
-      satelliteMetrics = await analyzeSatellitePolygon(points);
-    } catch (err) {
-      satelliteError = err.message;
-      console.warn('Earth Engine analysis failed:', err.message);
-    }
+  logFieldAnalysis('Received field analysis request', {
+    crop,
+    pointCount: points.length,
+    center: {
+      lat: Number(center.lat.toFixed(6)),
+      lng: Number(center.lng.toFixed(6))
+    },
+    areaHectares: Number(area.toFixed(3)),
+    region: region.label,
+    earthEngineEnabled: shouldUseEarthEngine()
+  });
+  if (!shouldUseEarthEngine()) {
+    throw new Error('Satellite analysis is disabled. Enable Earth Engine in backend/.env to analyze real imagery.');
   }
 
-  const healthScore = healthFromSatellite(satelliteMetrics, fallbackHealthScore);
+  const satelliteMetrics = await analyzeSatellitePolygon(points);
+  if (!satelliteMetrics?.imageCount) {
+    throw new Error('No recent Sentinel-2 imagery was available for this field. Try another area or date range.');
+  }
+
+  const healthScore = healthFromSatellite(satelliteMetrics);
+  logFieldAnalysis('Computed field health from satellite metrics', {
+    healthScore,
+    imageCount: satelliteMetrics.imageCount,
+    ndviMean: satelliteMetrics.ndviMean,
+    ndmiMean: satelliteMetrics.ndmiMean
+  });
 
   const zones = zoneFindingsFromSatellite([
     {
@@ -228,32 +196,13 @@ export async function analyzeFieldPolygon(polygon, options = {}) {
       finding: 'Canopy signal differs from the surrounding field and should be inspected.'
     }
   ], satelliteMetrics);
-  const suitability = cropSuitability(crop, region, area);
-  const aiAdvisory = await generateAiAdvisory({
-    crop,
-    center,
-    region,
-    area,
-    healthScore,
-    zones,
-    suitability
-  });
 
-  const fallbackRecommendations = [
-    `Scout the ${zones[0].label.toLowerCase()} area first and compare plant height, leaf color, and soil compaction against the healthy edge of the field.`,
-    crop === 'potato'
-      ? 'For potatoes, keep soil moisture consistent during tuber initiation and check low-vigor patches for nitrogen or potassium shortage.'
-      : `For ${crop}, match irrigation and nutrient checks to the weak-vigor and drought-stress patches before treating the full field.`,
-    'Use a follow-up drone or ground photo from the marked zones to confirm whether stress is water, nutrient, pest, or disease related.',
-    'Connect Earth Engine service-account credentials to replace this advisory layer with real Sentinel-2 NDVI/NDMI time-series analysis.'
-  ];
-
-  return {
-    source: satelliteMetrics?.imageCount ? 'google-earth-engine' : 'openai-field-advisory',
-    imagery: satelliteMetrics?.imageCount ? 'Sentinel-2 SR Harmonized NDVI/NDMI' : 'Sentinel-2 style multispectral assessment',
+  const result = {
+    source: 'google-earth-engine',
+    imagery: 'Sentinel-2 SR Harmonized NDVI/NDMI',
     satelliteMetrics,
-    satelliteError,
-    aiAdvisory: Boolean(aiAdvisory),
+    satelliteError: null,
+    aiAdvisory: false,
     vertexAi: Boolean(process.env.GOOGLE_CLOUD_PROJECT),
     crop,
     center: {
@@ -263,12 +212,21 @@ export async function analyzeFieldPolygon(polygon, options = {}) {
     region: region.label,
     areaHectares: Number(area.toFixed(3)),
     healthScore,
-    suitability: {
-      ...suitability,
-      explanation: aiAdvisory?.suitabilityExplanation || suitability.explanation
-    },
+    suitability: null,
     zones,
-    recommendations: aiAdvisory?.recommendations || fallbackRecommendations,
-    summary: aiAdvisory?.summary || `${region.label} is estimated as a ${suitability.score >= 75 ? 'good' : 'moderate'} ${crop} area. The selected field looks mostly healthy, with weak-vigor and drought-stress zones that should be checked before planting or fertilizing.`
+    recommendations: [
+      `Scout the ${zones[0].label.toLowerCase()} area first and compare plant vigor against the strongest part of the field.`,
+      `Ground-check the ${zones[1].label.toLowerCase()} patch for irrigation gaps or dry soil.`,
+      `Use follow-up field photos or soil checks before making ${crop}-specific planting or fertilizer decisions.`
+    ],
+    summary: `Measured Sentinel-2 imagery for ${region.label} shows NDVI ${satelliteMetrics.ndviMean.toFixed(2)} and NDMI ${satelliteMetrics.ndmiMean.toFixed(2)}. Use this as field-condition data, not a crop suitability prediction.`
   };
+
+  logFieldAnalysis('Returning field analysis response', {
+    healthScore: result.healthScore,
+    imageCount: result.satelliteMetrics.imageCount,
+    region: result.region
+  });
+
+  return result;
 }

@@ -1,6 +1,7 @@
 let googleMapsPromise;
 
-export function loadGoogleMaps(apiKey) {
+export function loadGoogleMaps(apiKey, options = {}) {
+  const { useAdvancedMarkers = false } = options;
   if (window.google?.maps) {
     return Promise.resolve(window.google);
   }
@@ -22,18 +23,30 @@ export function loadGoogleMaps(apiKey) {
       reject(new Error("Google Maps did not load. Check that the key has Maps JavaScript API enabled."));
     }, 10000);
 
-    window[callbackName] = () => {
+    window[callbackName] = async () => {
       window.clearTimeout(timeoutId);
       delete window[callbackName];
       if (window.google?.maps) {
-        resolve(window.google);
+        try {
+          if (useAdvancedMarkers && typeof window.google.maps.importLibrary === "function") {
+            await Promise.all([
+              window.google.maps.importLibrary("maps"),
+              window.google.maps.importLibrary("marker")
+            ]);
+          }
+          resolve(window.google);
+        } catch (error) {
+          googleMapsPromise = null;
+          reject(new Error("Google Maps libraries failed to initialize."));
+        }
       } else {
         googleMapsPromise = null;
         reject(new Error("Google Maps loaded without map access. Check API restrictions."));
       }
     };
 
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(apiKey)}&v=weekly&callback=${callbackName}`;
+    const librariesParam = useAdvancedMarkers ? "&libraries=marker" : "";
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(apiKey)}&v=weekly${librariesParam}&loading=async&callback=${callbackName}`;
     script.async = true;
     script.defer = true;
     script.onerror = () => {

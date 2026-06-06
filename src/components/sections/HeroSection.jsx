@@ -18,8 +18,8 @@ function HeroSection() {
             suppliers.
           </p>
           <div className="cta-group">
-            <a className="btn btn-ghost" href="/intelligence">
-              Explore intelligence
+            <a className="btn btn-ghost" href="/integration">
+              Explore integrations
             </a>
             <a className="btn btn-primary" href="/analyze">
               Analyze a photo

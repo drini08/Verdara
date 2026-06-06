@@ -1,7 +1,5 @@
-import dotenv from 'dotenv';
+import './env.js';
 import { initializeDatabase, getCollection } from './database.js';
-
-dotenv.config();
 
 async function main() {
   await initializeDatabase();

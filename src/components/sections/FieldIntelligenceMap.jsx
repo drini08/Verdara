@@ -3,6 +3,8 @@ import { analyzeField } from "../../services/geeService";
 import { loadGoogleMaps } from "../../services/googleMapsLoader";
 
 const googleMapsApiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY?.trim();
+const googleMapsMapId = import.meta.env.VITE_GOOGLE_MAPS_MAP_ID?.trim();
+const useAdvancedMarkers = Boolean(googleMapsMapId);
 
 const cropOptions = [
   { value: "potato", label: "Potato" },
@@ -11,6 +13,37 @@ const cropOptions = [
   { value: "pepper", label: "Pepper" },
   { value: "tomato", label: "Tomato" }
 ];
+
+function clearMapMarker(marker) {
+  if (!marker) return;
+  if (typeof marker.setMap === "function") {
+    marker.setMap(null);
+    return;
+  }
+  marker.map = null;
+}
+
+function createPointMarker(google, map, point, index) {
+  const advancedMarker = google.maps.marker?.AdvancedMarkerElement;
+  if (advancedMarker && googleMapsMapId) {
+    const content = document.createElement("div");
+    content.className = "field-point-marker";
+    content.textContent = `${index + 1}`;
+
+    return new advancedMarker({
+      map,
+      position: point,
+      title: `Boundary point ${index + 1}`,
+      content
+    });
+  }
+
+  return new google.maps.Marker({
+    position: point,
+    label: `${index + 1}`,
+    map
+  });
+}
 
 function polygonAreaHectares(points) {
   if (points.length < 3) return 0;
@@ -59,7 +92,7 @@ function FieldIntelligenceMap() {
     let cancelled = false;
     let clickListener;
 
-    loadGoogleMaps(googleMapsApiKey)
+    loadGoogleMaps(googleMapsApiKey, { useAdvancedMarkers })
       .then((google) => {
         if (cancelled || !mapNodeRef.current) return;
 
@@ -69,6 +102,7 @@ function FieldIntelligenceMap() {
           mapRef.current = new google.maps.Map(mapNodeRef.current, {
             center: { lat: 47.1625, lng: 19.5033 },
             zoom: 8,
+            ...(googleMapsMapId ? { mapId: googleMapsMapId } : {}),
             mapTypeId: "satellite",
             streetViewControl: false,
             fullscreenControl: true,
@@ -113,7 +147,7 @@ function FieldIntelligenceMap() {
     if (polygonRef.current) {
       polygonRef.current.setMap(null);
     }
-    markerRefs.current.forEach((marker) => marker.setMap(null));
+    markerRefs.current.forEach(clearMapMarker);
     markerRefs.current = [];
 
     if (points.length > 0) {
@@ -127,13 +161,7 @@ function FieldIntelligenceMap() {
         map
       });
 
-      markerRefs.current = points.map((point, index) => (
-        new google.maps.Marker({
-          position: point,
-          label: `${index + 1}`,
-          map
-        })
-      ));
+      markerRefs.current = points.map((point, index) => createPointMarker(google, map, point, index));
     }
   }, [points]);
 
@@ -317,7 +345,7 @@ function FieldIntelligenceMap() {
               <div className="satellite-metrics">
                 <div>
                   <span>Imagery source</span>
-                  <strong>{analysis.source === "google-earth-engine" ? "Earth Engine" : "Gemini"}</strong>
+                  <strong>Earth Engine</strong>
                 </div>
               </div>
               {analysis.satelliteError && (

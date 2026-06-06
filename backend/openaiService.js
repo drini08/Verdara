@@ -1,6 +1,4 @@
-import dotenv from 'dotenv';
-
-dotenv.config();
+import './env.js';
 
 const OPENAI_RESPONSES_URL = 'https://api.openai.com/v1/responses';
 
@@ -78,4 +76,3 @@ export async function generateOpenAiFieldAdvisory(prompt) {
 
   return JSON.parse(outputText);
 }
-
