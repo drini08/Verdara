@@ -39,22 +39,63 @@ function buildGrid(query = {}) {
   const south = clamp(toNumber(query.south, DEFAULT_LOCATION.lat - 0.12), -90, 90);
   const east = clamp(toNumber(query.east, DEFAULT_LOCATION.lng + 0.12), -180, 180);
   const west = clamp(toNumber(query.west, DEFAULT_LOCATION.lng - 0.12), -180, 180);
-  const rows = clamp(Math.round(toNumber(query.rows, 3)), 2, 5);
-  const cols = clamp(Math.round(toNumber(query.cols, 3)), 2, 5);
-  const latStep = rows === 1 ? 0 : (north - south) / (rows - 1);
-  const lngStep = cols === 1 ? 0 : (east - west) / (cols - 1);
+  const rows = clamp(Math.round(toNumber(query.rows, 8)), 2, 12);
+  const cols = clamp(Math.round(toNumber(query.cols, 8)), 2, 12);
+  const latStep = (north - south) / rows;
+  const lngStep = (east - west) / cols;
   const points = [];
 
   for (let row = 0; row < rows; row += 1) {
     for (let col = 0; col < cols; col += 1) {
       points.push({
-        lat: Number((north - (latStep * row)).toFixed(4)),
-        lng: Number((west + (lngStep * col)).toFixed(4))
+        row,
+        col,
+        lat: Number((north - (latStep * (row + 0.5))).toFixed(4)),
+        lng: Number((west + (lngStep * (col + 0.5))).toFixed(4))
       });
     }
   }
 
-  return { north, south, east, west, rows, cols, points };
+  return { north, south, east, west, rows, cols, latStep, lngStep, points };
+}
+
+function cellBounds(grid, point) {
+  const north = grid.north - (grid.latStep * point.row);
+  const south = north - grid.latStep;
+  const west = grid.west + (grid.lngStep * point.col);
+  const east = west + grid.lngStep;
+
+  return {
+    north: clamp(north, -90, 90),
+    south: clamp(south, -90, 90),
+    east: clamp(east, -180, 180),
+    west: clamp(west, -180, 180)
+  };
+}
+
+function averageAvailable(values) {
+  const numericValues = values
+    .map((value) => Number(value))
+    .filter((value) => Number.isFinite(value));
+
+  if (!numericValues.length) return null;
+
+  return numericValues.reduce((sum, value) => sum + value, 0) / numericValues.length;
+}
+
+function firstHourlyValue(hourly, key) {
+  return Array.isArray(hourly?.[key]) ? hourly[key][0] : null;
+}
+
+function percentFromRatio(value) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? Number((parsed * 100).toFixed(1)) : null;
+}
+
+function hourlyValueAt(hourly, key, index) {
+  const value = Array.isArray(hourly?.[key]) ? hourly[key][index] : null;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
 }
 
 export async function getWeatherRisk(query = {}) {
@@ -113,9 +154,26 @@ export async function getRadarOverlay() {
   }
 
   const data = await response.json();
-  const latestFrame = data.radar?.past?.at(-1) || data.radar?.nowcast?.[0] || null;
+  const pastFrames = (data.radar?.past || []).map((frame) => ({
+    ...frame,
+    type: 'past'
+  }));
+  const nowcastFrames = (data.radar?.nowcast || []).map((frame) => ({
+    ...frame,
+    type: 'forecast'
+  }));
+  const frames = [...pastFrames, ...nowcastFrames]
+    .filter((frame) => frame?.path && frame?.time)
+    .map((frame) => ({
+      type: frame.type,
+      time: frame.time,
+      path: frame.path,
+      tileUrlTemplate: `${data.host}${frame.path}/256/{z}/{x}/{y}/2/1_1.png`
+    }));
+  const defaultFrameIndex = Math.max(0, pastFrames.length - 1);
+  const latestFrame = frames[defaultFrameIndex] || frames.at(-1) || null;
 
-  if (!latestFrame?.path || !data.host) {
+  if (!latestFrame || !data.host) {
     throw new Error('RainViewer returned no radar frame.');
   }
 
@@ -124,6 +182,110 @@ export async function getRadarOverlay() {
     host: data.host,
     generated: data.generated,
     frameTime: latestFrame.time,
-    tileUrlTemplate: `${data.host}${latestFrame.path}/256/{z}/{x}/{y}/2/1_1.png`
+    defaultFrameIndex,
+    frames,
+    tileUrlTemplate: latestFrame.tileUrlTemplate
+  };
+}
+
+export async function getMoistureGrid(query = {}) {
+  const grid = buildGrid(query);
+  const url = new URL('https://api.open-meteo.com/v1/forecast');
+  url.searchParams.set('latitude', grid.points.map((point) => point.lat).join(','));
+  url.searchParams.set('longitude', grid.points.map((point) => point.lng).join(','));
+  url.searchParams.set('hourly', 'soil_moisture_0_to_1cm,soil_moisture_1_to_3cm,soil_moisture_3_to_9cm');
+  url.searchParams.set('forecast_days', '1');
+  url.searchParams.set('timezone', 'auto');
+
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`Open-Meteo soil moisture API failed with ${response.status}`);
+  }
+
+  const data = await response.json();
+  const locations = Array.isArray(data) ? data : [data];
+  const items = grid.points.map((point, index) => {
+    const hourly = locations[index]?.hourly || {};
+    const topLayer = firstHourlyValue(hourly, 'soil_moisture_0_to_1cm');
+    const shallowLayer = firstHourlyValue(hourly, 'soil_moisture_1_to_3cm');
+    const rootLayer = firstHourlyValue(hourly, 'soil_moisture_3_to_9cm');
+    const average = averageAvailable([topLayer, shallowLayer, rootLayer]);
+
+    return {
+      ...point,
+      bounds: cellBounds(grid, point),
+      soilMoisturePercent: average === null ? null : Number((average * 100).toFixed(1)),
+      layers: {
+        top0To1cm: percentFromRatio(topLayer),
+        shallow1To3cm: percentFromRatio(shallowLayer),
+        root3To9cm: percentFromRatio(rootLayer)
+      }
+    };
+  });
+
+  return {
+    attribution: 'Soil moisture forecast by Open-Meteo',
+    generatedAt: new Date().toISOString(),
+    bounds: {
+      north: grid.north,
+      south: grid.south,
+      east: grid.east,
+      west: grid.west
+    },
+    rows: grid.rows,
+    cols: grid.cols,
+    items
+  };
+}
+
+export async function getRainForecastGrid(query = {}) {
+  const grid = buildGrid(query);
+  const hourCount = clamp(Math.round(toNumber(query.hours, 25)), 2, 25);
+  const url = new URL('https://api.open-meteo.com/v1/forecast');
+  url.searchParams.set('latitude', grid.points.map((point) => point.lat).join(','));
+  url.searchParams.set('longitude', grid.points.map((point) => point.lng).join(','));
+  url.searchParams.set('hourly', 'precipitation,precipitation_probability');
+  url.searchParams.set('forecast_days', '2');
+  url.searchParams.set('timezone', 'auto');
+
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`Open-Meteo rain forecast API failed with ${response.status}`);
+  }
+
+  const data = await response.json();
+  const locations = Array.isArray(data) ? data : [data];
+  const frameTimes = (locations[0]?.hourly?.time || []).slice(0, hourCount);
+  const frames = frameTimes.map((time, hourIndex) => ({
+    type: 'forecast',
+    time,
+    hourOffset: hourIndex,
+    items: grid.points.map((point, pointIndex) => {
+      const hourly = locations[pointIndex]?.hourly || {};
+      const precipitationMm = hourlyValueAt(hourly, 'precipitation', hourIndex);
+      const precipitationProbability = hourlyValueAt(hourly, 'precipitation_probability', hourIndex);
+
+      return {
+        ...point,
+        bounds: cellBounds(grid, point),
+        precipitationMm: precipitationMm === null ? null : Number(precipitationMm.toFixed(1)),
+        precipitationProbability: precipitationProbability === null ? null : Math.round(precipitationProbability)
+      };
+    })
+  }));
+
+  return {
+    attribution: 'Rain forecast by Open-Meteo',
+    generatedAt: new Date().toISOString(),
+    bounds: {
+      north: grid.north,
+      south: grid.south,
+      east: grid.east,
+      west: grid.west
+    },
+    rows: grid.rows,
+    cols: grid.cols,
+    defaultFrameIndex: 0,
+    frames
   };
 }

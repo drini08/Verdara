@@ -6,7 +6,7 @@ import { signup, login, getUserById, getUserAnalysisHistory, saveAnalysisResult 
 import { authMiddleware, optionalAuthMiddleware } from './auth.js';
 import { analyzeCropImage } from './analysisEngine.js';
 import { analyzeFieldPolygon } from './fieldAnalysis.js';
-import { getRadarOverlay, getWeatherRisk } from './weatherService.js';
+import { getMoistureGrid, getRadarOverlay, getRainForecastGrid, getWeatherRisk } from './weatherService.js';
 import { getMarketplacePosts, createMarketplacePost, addComment, getPostComments, updateMarketplacePost, deletePost, markPostAsCompleted } from './marketplace.js';
 import { generateMarketplaceItemImage } from './openaiService.js';
 import { initializeDatabase, getCollection, updateRecord, removeRecord } from './database.js';
@@ -142,6 +142,24 @@ app.get('/api/weather/radar', async (req, res) => {
   try {
     const radar = await getRadarOverlay();
     res.json(radar);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/weather/moisture', async (req, res) => {
+  try {
+    const moisture = await getMoistureGrid(req.query);
+    res.json(moisture);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/weather/rain-forecast', async (req, res) => {
+  try {
+    const forecast = await getRainForecastGrid(req.query);
+    res.json(forecast);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
