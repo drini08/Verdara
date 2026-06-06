@@ -31,13 +31,6 @@ function polygonAreaHectares(points) {
   return Math.abs(area * earthRadius * earthRadius / 2) / 10000;
 }
 
-function resultColor(type) {
-  if (type === "drought") return "#b86b1d";
-  if (type === "unhealthy") return "#b73939";
-  if (type === "weak") return "#d9a617";
-  return "#2f7d46";
-}
-
 function FieldIntelligenceMap() {
   const mapNodeRef = useRef(null);
   const mapRef = useRef(null);
@@ -45,7 +38,6 @@ function FieldIntelligenceMap() {
   const geocoderRef = useRef(null);
   const polygonRef = useRef(null);
   const markerRefs = useRef([]);
-  const zoneRefs = useRef([]);
   const drawModeRef = useRef(true);
   const [mapReady, setMapReady] = useState(false);
   const [mapError, setMapError] = useState("");
@@ -153,30 +145,6 @@ function FieldIntelligenceMap() {
       });
     }
   }, [drawMode]);
-
-  useEffect(() => {
-    const google = googleRef.current;
-    const map = mapRef.current;
-    if (!google || !map) return;
-
-    zoneRefs.current.forEach((zone) => zone.setMap(null));
-    zoneRefs.current = [];
-
-    if (!analysis?.zones?.length) return;
-
-    zoneRefs.current = analysis.zones.map((zone) => (
-      new google.maps.Circle({
-        center: zone.center,
-        radius: Math.max(35, Math.sqrt(zone.areaHectares) * 90),
-        strokeColor: resultColor(zone.type),
-        strokeOpacity: 0.95,
-        strokeWeight: 2,
-        fillColor: resultColor(zone.type),
-        fillOpacity: 0.32,
-        map
-      })
-    ));
-  }, [analysis]);
 
   function clearField() {
     setPoints([]);
