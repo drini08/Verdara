@@ -619,15 +619,19 @@ h2 {
 }
 
 .listing-card-image {
-  aspect-ratio: 16 / 10;
+  /* Increased size for premium look */
+  aspect-ratio: 4 / 3; /* taller image */
+  height: 300px;
   overflow: hidden;
   flex-shrink: 0;
+  border: 4px solid var(--border); /* subtle border */
+  border-radius: var(--radius);
 }
 
 .listing-card-image img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain; /* ensure full image visible */
   display: block;
 }
 
@@ -2026,4 +2030,488 @@ h2 {
 
 .diagnosis-warning strong {
   margin-right: 4px;
+}
+
+/* ==========================================
+   MARKETPLACE PAGE & LISTINGS
+   ========================================== */
+
+/* Layout & Grid */
+.marketplace-section {
+  padding: 40px 0 80px;
+}
+
+.marketplace-header {
+  margin-bottom: 40px;
+}
+
+.marketplace-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+.marketplace-title-row h1 {
+  margin: 0 0 6px 0;
+  font-size: 2.2rem;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+}
+
+.marketplace-subtitle {
+  margin: 0;
+  color: var(--fg-muted);
+  font-size: 1rem;
+}
+
+.marketplace-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 16px;
+  margin-top: 8px;
+}
+
+.filter-btn-group, .status-tab-group {
+  display: flex;
+  gap: 8px;
+}
+
+/* Rounded tag style for category filters */
+.filter-btn {
+  padding: 8px 18px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--bg-elevated);
+  color: var(--fg-muted);
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+}
+
+.filter-btn:hover {
+  border-color: rgba(20, 24, 20, 0.15);
+  color: var(--fg);
+}
+
+.filter-btn.active-all {
+  background: var(--fg);
+  color: var(--bg);
+  border-color: var(--fg);
+}
+
+.filter-btn.active-sell {
+  background: #22c55e;
+  color: white;
+  border-color: #22c55e;
+}
+
+.filter-btn.active-buy {
+  background: #3b82f6;
+  color: white;
+  border-color: #3b82f6;
+}
+
+/* Status tabs (Active vs History) */
+.status-tab {
+  padding: 8px 16px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: var(--fg-muted);
+  font-weight: 600;
+  font-size: 0.875rem;
+  position: relative;
+  transition: color 0.2s ease;
+}
+
+.status-tab:hover {
+  color: var(--fg);
+}
+
+.status-tab.active {
+  color: var(--fg);
+}
+
+.status-tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: -17px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--fg);
+}
+
+/* Grid layout */
+.listing-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 24px;
+}
+
+/* Premium Card Design */
+.listing-card {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.listing-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
+}
+
+/* Image container with border that fits the whole image inside */
+.listing-card-image-box {
+  width: 100%;
+  height: 220px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  position: relative;
+  overflow: hidden;
+}
+
+.listing-card-image-box img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.listing-card-image-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--fg-muted);
+  font-size: 0.875rem;
+}
+
+/* Card Body */
+.listing-card-content {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.listing-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.listing-card-badge {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 4px 10px;
+  border-radius: 6px;
+}
+
+.listing-card-badge.sell {
+  background: rgba(34, 197, 94, 0.1);
+  color: #15803d;
+}
+
+.listing-card-badge.buy {
+  background: rgba(59, 130, 246, 0.1);
+  color: #1d4ed8;
+}
+
+.listing-card-actions-top {
+  display: flex;
+  gap: 4px;
+}
+
+.icon-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.1rem;
+  padding: 4px;
+  border-radius: 4px;
+  transition: background 0.2s ease;
+}
+
+.icon-btn:hover {
+  background: var(--bg);
+}
+
+.listing-card-title {
+  margin: 0 0 10px 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--fg);
+}
+
+/* Metadata row */
+.listing-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  font-size: 0.85rem;
+  color: var(--fg-muted);
+  margin-bottom: 12px;
+}
+
+.listing-card-meta span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Info grid */
+.listing-card-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 16px;
+  background: var(--bg);
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.info-item .info-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+  letter-spacing: 0.05em;
+  margin-bottom: 2px;
+}
+
+.info-item .info-value {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.listing-card-description {
+  margin: 0 0 20px 0;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--fg-muted);
+  flex-grow: 1;
+}
+
+/* Comments Section inside Card */
+.listing-comments-section {
+  border-top: 1px solid var(--border);
+  padding-top: 16px;
+  margin-top: auto;
+}
+
+.comments-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin: 0 0 10px 0;
+  color: var(--fg);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.comments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 130px;
+  overflow-y: auto;
+  margin-bottom: 12px;
+  padding-right: 4px;
+}
+
+/* Styling custom scrollbar */
+.comments-list::-webkit-scrollbar {
+  width: 4px;
+}
+.comments-list::-webkit-scrollbar-thumb {
+  background: rgba(20, 24, 20, 0.15);
+  border-radius: 4px;
+}
+
+.comment-bubble {
+  background: var(--bg);
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+.comment-author {
+  font-weight: 600;
+  color: var(--fg);
+  margin-right: 6px;
+}
+
+.comment-input-row {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.comment-input-row input {
+  flex: 1;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  font-size: 0.82rem;
+  outline: none;
+  font-family: inherit;
+  transition: all 0.2s ease;
+}
+
+.comment-input-row input:focus {
+  border-color: rgba(26, 77, 40, 0.3);
+  background: var(--bg-elevated);
+}
+
+.comment-input-row button {
+  padding: 8px 16px;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+
+/* Edit Mode Form Override */
+.edit-mode-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.edit-mode-form label {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--fg-muted);
+  gap: 4px;
+}
+
+.edit-mode-form input,
+.edit-mode-form select,
+.edit-mode-form textarea {
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  font-family: inherit;
+  font-size: 0.9rem;
+  outline: none;
+  width: 100%;
+  transition: all 0.2s ease;
+}
+
+.edit-mode-form input:focus,
+.edit-mode-form select:focus,
+.edit-mode-form textarea:focus {
+  border-color: var(--accent);
+  background: var(--bg-elevated);
+}
+
+.edit-mode-form textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.edit-mode-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 12px;
+}
+
+/* Confirm panel */
+.marketplace-confirm-panel {
+  background: rgba(111, 66, 193, 0.06);
+  border: 1px solid rgba(111, 66, 193, 0.15);
+  border-radius: 8px;
+  padding: 12px;
+  margin: 12px 0;
+  font-size: 0.85rem;
+}
+
+.marketplace-confirm-panel strong {
+  color: #6f42c1;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.marketplace-confirm-panel p {
+  margin: 0 0 10px 0;
+  color: var(--fg-muted);
+}
+
+.marketplace-confirm-panel div {
+  display: flex;
+  gap: 8px;
+}
+
+.marketplace-confirm-panel button {
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+
+.marketplace-confirm-panel button:first-child {
+  background: #6f42c1;
+  color: white;
+}
+
+.marketplace-confirm-panel button:last-child {
+  background: white;
+  border-color: var(--border);
+  color: var(--fg);
+}
+
+/* Status Messages */
+.marketplace-card-status {
+  color: #15803d;
+  background: rgba(34, 197, 94, 0.08);
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  margin: 10px 0 0;
+}
+
+.marketplace-card-error {
+  color: #b91c1c;
+  background: rgba(220, 38, 38, 0.08);
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  margin: 10px 0 0;
 }

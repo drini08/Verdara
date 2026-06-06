@@ -105,58 +105,57 @@ const Marketplace = () => {
   };
 
   return (
-    <div className="container marketplace-section" style={{ paddingTop: '20px' }}>
-      <header style={{ marginBottom: '30px', borderBottom: '2px solid #eee', paddingBottom: '20px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+    <div className="container marketplace-section">
+      <header className="marketplace-header">
+        <div className="marketplace-title-row">
           <div>
-            <h1 style={{ margin: '0 0 10px 0', fontSize: '2.2em' }}>🌾 Agricultural Marketplace</h1>
-            <p style={{ margin: 0, color: '#666' }}>
+            <h1>🌾 Agricultural Marketplace</h1>
+            <p className="marketplace-subtitle">
               {isLoggedIn ? `Welcome back, ${user?.username}!` : 'Direct trading between farmers and buyers'}
             </p>
           </div>
           {isLoggedIn && (
             <button 
-              className="btn-primary" 
+              className="btn btn-primary" 
               onClick={() => setIsModalOpen(true)}
-              style={{ padding: '12px 24px', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '1.1em', fontWeight: 'bold', boxShadow: '0 4px 6px rgba(40,167,69,0.2)' }}
             >
               + Create New Post
             </button>
           )}
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '25px' }}>
-          <div style={{ display: 'flex', gap: '10px' }}>
+        <div className="marketplace-controls">
+          <div className="filter-btn-group">
             <button 
               onClick={() => setFilterType('all')}
-              style={{ padding: '8px 16px', borderRadius: '20px', border: '1px solid #ccc', backgroundColor: filterType === 'all' ? '#333' : '#fff', color: filterType === 'all' ? '#fff' : '#333', cursor: 'pointer', fontWeight: 'bold' }}
+              className={`filter-btn ${filterType === 'all' ? 'active-all' : ''}`}
             >
               All Posts
             </button>
             <button 
               onClick={() => setFilterType('sell')}
-              style={{ padding: '8px 16px', borderRadius: '20px', border: '1px solid #ccc', backgroundColor: filterType === 'sell' ? '#28a745' : '#fff', color: filterType === 'sell' ? '#fff' : '#28a745', cursor: 'pointer', fontWeight: 'bold' }}
+              className={`filter-btn ${filterType === 'sell' ? 'active-sell' : ''}`}
             >
               Selling
             </button>
             <button 
               onClick={() => setFilterType('buy')}
-              style={{ padding: '8px 16px', borderRadius: '20px', border: '1px solid #ccc', backgroundColor: filterType === 'buy' ? '#007bff' : '#fff', color: filterType === 'buy' ? '#fff' : '#007bff', cursor: 'pointer', fontWeight: 'bold' }}
+              className={`filter-btn ${filterType === 'buy' ? 'active-buy' : ''}`}
             >
               Buying
             </button>
           </div>
 
-          <div style={{ display: 'flex', gap: '10px' }}>
+          <div className="status-tab-group">
             <button 
               onClick={() => setViewStatus('active')}
-              style={{ padding: '8px 16px', border: 'none', background: 'none', borderBottom: viewStatus === 'active' ? '2px solid #333' : 'none', cursor: 'pointer', color: viewStatus === 'active' ? '#333' : '#999', fontWeight: 'bold' }}
+              className={`status-tab ${viewStatus === 'active' ? 'active' : ''}`}
             >
               Active Deals
             </button>
             <button 
               onClick={() => setViewStatus('completed')}
-              style={{ padding: '8px 16px', border: 'none', background: 'none', borderBottom: viewStatus === 'completed' ? '2px solid #333' : 'none', cursor: 'pointer', color: viewStatus === 'completed' ? '#333' : '#999', fontWeight: 'bold' }}
+              className={`status-tab ${viewStatus === 'completed' ? 'active' : ''}`}
             >
               History
             </button>
@@ -165,25 +164,21 @@ const Marketplace = () => {
       </header>
 
       {error && (
-        <div style={{ padding: '15px', marginBottom: '20px', backgroundColor: '#f8d7da', color: '#721c24', borderRadius: '4px', border: '1px solid #f5c6cb' }}>
+        <div className="marketplace-card-error" style={{ marginBottom: '24px' }}>
           {error}
         </div>
       )}
 
       {isLoading ? (
-        <div style={{ textAlign: 'center', padding: '60px', color: '#666' }}>
+        <div style={{ textAlign: 'center', padding: '60px', color: 'var(--fg-muted)' }}>
           <p style={{ fontSize: '1.2em' }}>Loading marketplace listings...</p>
         </div>
       ) : (
-        <div className="listings-grid" style={{ 
-          display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', 
-          gap: '25px' 
-        }}>
+        <div className="listing-grid">
           {filteredListings.length === 0 ? (
-            <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '60px', backgroundColor: '#f9f9f9', borderRadius: '12px', border: '2px dashed #ddd' }}>
-              <p style={{ fontSize: '1.3em', color: '#666' }}>No listings found in this category.</p>
-              {viewStatus === 'active' && <p style={{ color: '#999' }}>Why not create the first one?</p>}
+            <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '60px', backgroundColor: 'var(--bg-elevated)', borderRadius: 'var(--radius)', border: '1px dashed var(--border)' }}>
+              <p style={{ fontSize: '1.3em', color: 'var(--fg-muted)' }}>No listings found in this category.</p>
+              {viewStatus === 'active' && <p style={{ color: 'var(--fg-muted)', opacity: 0.8 }}>Why not create the first one?</p>}
             </div>
           ) : (
             filteredListings.map(listing => (
