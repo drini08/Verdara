@@ -78,3 +78,52 @@ export async function generateOpenAiFieldAdvisory(prompt) {
   return JSON.parse(outputText);
 }
 
+export async function generateMarketplaceItemImage(title, description) {
+  const apiKey = getOpenAiKey();
+  if (!apiKey) {
+    console.log('No OpenAI API key — skipping marketplace image generation.');
+    return null;
+  }
+
+  const prompt = `A beautiful, high-quality photograph of fresh ${title}. Agricultural marketplace style, clean white background with soft natural lighting, vibrant colors. ${description ? description.slice(0, 100) : ''}`.trim();
+
+  try {
+    const response = await fetch(OPENAI_IMAGES_URL, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: 'gpt-image-1',
+        prompt,
+        n: 1,
+        size: '1024x1024',
+        quality: 'auto'
+      })
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`DALL-E image generation failed: ${response.status} ${errorText}`);
+      return null;
+    }
+
+    const data = await response.json();
+    let imageUrl = data?.data?.[0]?.url;
+
+    if (!imageUrl && data?.data?.[0]?.b64_json) {
+      imageUrl = `data:image/png;base64,${data.data[0].b64_json}`;
+    }
+
+    if (!imageUrl) {
+      console.error('DALL-E returned no image URL or base64 data.');
+      return null;
+    }
+
+    return imageUrl;
+  } catch (err) {
+    console.error('Error generating marketplace image:', err.message);
+    return null;
+  }
+}
