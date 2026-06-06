@@ -1,6 +1,7 @@
 import './env.js';
 
 const OPENAI_RESPONSES_URL = 'https://api.openai.com/v1/responses';
+const OPENAI_IMAGES_URL = 'https://api.openai.com/v1/images/generations';
 
 function getOpenAiKey() {
   const key = process.env.OPENAI_API_KEY?.trim();
@@ -76,3 +77,4 @@ export async function generateOpenAiFieldAdvisory(prompt) {
 
   return JSON.parse(outputText);
 }
+
