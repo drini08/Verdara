@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { analyzeField } from "../../services/geeService";
 import { loadGoogleMaps } from "../../services/googleMapsLoader";
+import { fetchRadarOverlay } from "../../services/weatherOverlayService";
 
 const googleMapsApiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY?.trim();
 const googleMapsMapId = import.meta.env.VITE_GOOGLE_MAPS_MAP_ID?.trim();
@@ -12,6 +13,10 @@ const cropOptions = [
   { value: "corn", label: "Corn" },
   { value: "pepper", label: "Pepper" },
   { value: "tomato", label: "Tomato" }
+];
+const overlayModes = [
+  { value: "satellite", label: "Satellite" },
+  { value: "rain", label: "Rain" }
 ];
 
 function clearMapMarker(marker) {
@@ -71,6 +76,8 @@ function FieldIntelligenceMap() {
   const geocoderRef = useRef(null);
   const polygonRef = useRef(null);
   const markerRefs = useRef([]);
+  const weatherOverlayRef = useRef(null);
+  const weatherAbortRef = useRef(null);
   const drawModeRef = useRef(true);
   const [mapReady, setMapReady] = useState(false);
   const [mapError, setMapError] = useState("");
@@ -81,6 +88,10 @@ function FieldIntelligenceMap() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisError, setAnalysisError] = useState("");
   const [analysis, setAnalysis] = useState(null);
+  const [overlayMode, setOverlayMode] = useState("satellite");
+  const [overlayError, setOverlayError] = useState("");
+  const [overlayLoading, setOverlayLoading] = useState(false);
+  const [overlayAttribution, setOverlayAttribution] = useState("");
 
   const areaHectares = useMemo(() => polygonAreaHectares(points), [points]);
 
@@ -101,7 +112,7 @@ function FieldIntelligenceMap() {
           geocoderRef.current = new google.maps.Geocoder();
           mapRef.current = new google.maps.Map(mapNodeRef.current, {
             center: { lat: 47.1625, lng: 19.5033 },
-            zoom: 8,
+            zoom: 9,
             ...(googleMapsMapId ? { mapId: googleMapsMapId } : {}),
             mapTypeId: "satellite",
             streetViewControl: false,
@@ -139,6 +150,12 @@ function FieldIntelligenceMap() {
     };
   }, []);
 
+  useEffect(() => () => {
+    if (weatherAbortRef.current) {
+      weatherAbortRef.current.abort();
+    }
+  }, []);
+
   useEffect(() => {
     const google = googleRef.current;
     const map = mapRef.current;
@@ -164,6 +181,200 @@ function FieldIntelligenceMap() {
       markerRefs.current = points.map((point, index) => createPointMarker(google, map, point, index));
     }
   }, [points]);
+
+  useEffect(() => {
+    const google = googleRef.current;
+    const map = mapRef.current;
+    if (!google || !map || !mapReady) return undefined;
+
+    const clearOverlay = () => {
+      if (weatherOverlayRef.current) {
+        map.overlayMapTypes.clear();
+        weatherOverlayRef.current = null;
+      }
+      setOverlayAttribution("");
+    };
+
+    const abortController = new AbortController();
+    weatherAbortRef.current?.abort();
+    weatherAbortRef.current = abortController;
+    setOverlayError("");
+
+    if (overlayMode === "satellite") {
+      clearOverlay();
+      setOverlayLoading(false);
+      return () => abortController.abort();
+    }
+
+    const applyRainOverlay = async () => {
+      setOverlayLoading(true);
+      clearOverlay();
+      try {
+        const radar = await fetchRadarOverlay({ signal: abortController.signal });
+        if (abortController.signal.aborted) return;
+
+        weatherOverlayRef.current = new google.maps.ImageMapType({
+          tileSize: new google.maps.Size(256, 256),
+          name: "Rain Radar",
+          opacity: 0.72,
+          getTileUrl: (point, zoom) => radar.tileUrlTemplate
+            .replace("{z}", String(zoom))
+            .replace("{x}", String(point.x))
+            .replace("{y}", String(point.y))
+        });
+        map.overlayMapTypes.clear();
+        map.overlayMapTypes.push(weatherOverlayRef.current);
+        setOverlayAttribution(radar.attribution);
+      } catch (error) {
+        if (!abortController.signal.aborted) {
+          setOverlayError(error.message);
+        }
+      } finally {
+        if (!abortController.signal.aborted) {
+          setOverlayLoading(false);
+        }
+      }
+    };
+
+    const applyWindOverlay = async () => {
+      setOverlayLoading(true);
+      clearOverlay();
+      try {
+        const bounds = map.getBounds();
+        if (!bounds) {
+          throw new Error("Move or zoom the map once to load wind data.");
+        }
+
+        const northEast = bounds.getNorthEast();
+        const southWest = bounds.getSouthWest();
+        const windGrid = await fetchWindGrid({
+          bounds: {
+            north: northEast.lat(),
+            south: southWest.lat(),
+            east: northEast.lng(),
+            west: southWest.lng()
+          },
+          rows: 3,
+          cols: 3,
+          signal: abortController.signal
+        });
+        if (abortController.signal.aborted) return;
+
+        weatherMarkerRefs.current = windGrid.items.map((item) => createWindMarker(google, map, item));
+        setOverlayAttribution(windGrid.attribution);
+      } catch (error) {
+        if (!abortController.signal.aborted) {
+          setOverlayError(error.message);
+        }
+      } finally {
+        if (!abortController.signal.aborted) {
+          setOverlayLoading(false);
+        }
+      }
+    };
+
+    const applyThermalOverlay = async () => {
+      setOverlayLoading(true);
+      clearOverlay();
+      try {
+        const bounds = map.getBounds();
+        if (!bounds) {
+          throw new Error("Move or zoom the map once to load thermal data.");
+        }
+
+        const northEast = bounds.getNorthEast();
+        const southWest = bounds.getSouthWest();
+        const thermalGrid = await fetchThermalGrid({
+          bounds: {
+            north: northEast.lat(),
+            south: southWest.lat(),
+            east: northEast.lng(),
+            west: southWest.lng()
+          },
+          rows: 3,
+          cols: 3,
+          signal: abortController.signal
+        });
+        if (abortController.signal.aborted) return;
+
+        const thermalBounds = buildCellBounds(thermalGrid.items);
+        weatherShapeRefs.current = thermalGrid.items.map((item, index) => {
+          const color = thermalColor(item.soilTemperatureC);
+          return new google.maps.Rectangle({
+            bounds: thermalBounds[index],
+            map,
+            strokeOpacity: 0,
+            fillColor: color,
+            fillOpacity: 0.34
+          });
+        });
+        setOverlayAttribution(thermalGrid.attribution);
+      } catch (error) {
+        if (!abortController.signal.aborted) {
+          setOverlayError(error.message);
+        }
+      } finally {
+        if (!abortController.signal.aborted) {
+          setOverlayLoading(false);
+        }
+      }
+    };
+
+    const applyMoistureOverlay = async () => {
+      setOverlayLoading(true);
+      clearOverlay();
+      try {
+        const bounds = map.getBounds();
+        if (!bounds) {
+          throw new Error("Move or zoom the map once to load moisture data.");
+        }
+
+        const northEast = bounds.getNorthEast();
+        const southWest = bounds.getSouthWest();
+        const moistureGrid = await fetchMoistureGrid({
+          bounds: {
+            north: northEast.lat(),
+            south: southWest.lat(),
+            east: northEast.lng(),
+            west: southWest.lng()
+          },
+          rows: 3,
+          cols: 3,
+          signal: abortController.signal
+        });
+        if (abortController.signal.aborted) return;
+
+        const moistureBounds = buildCellBounds(moistureGrid.items);
+        weatherShapeRefs.current = moistureGrid.items.map((item, index) => {
+          const color = moistureColor(item.soilMoisturePercent);
+          return new google.maps.Rectangle({
+            bounds: moistureBounds[index],
+            map,
+            strokeOpacity: 0,
+            fillColor: color,
+            fillOpacity: 0.32
+          });
+        });
+        setOverlayAttribution(moistureGrid.attribution);
+      } catch (error) {
+        if (!abortController.signal.aborted) {
+          setOverlayError(error.message);
+        }
+      } finally {
+        if (!abortController.signal.aborted) {
+          setOverlayLoading(false);
+        }
+      }
+    };
+
+    if (overlayMode === "rain") {
+      applyRainOverlay();
+    }
+
+    return () => {
+      abortController.abort();
+    };
+  }, [mapReady, overlayMode]);
 
   useEffect(() => {
     if (polygonRef.current) {
@@ -286,11 +497,31 @@ function FieldIntelligenceMap() {
             <button type="button" onClick={undoPoint} disabled={!points.length}>Undo</button>
             <button type="button" onClick={clearField} disabled={!points.length && !analysis}>Clear</button>
           </div>
+          <div className="field-overlay-toolbar">
+            {overlayModes.map((mode) => (
+              <button
+                key={mode.value}
+                type="button"
+                className={overlayMode === mode.value ? "overlay-active" : ""}
+                onClick={() => setOverlayMode(mode.value)}
+                disabled={!mapReady}
+              >
+                {mode.label}
+              </button>
+            ))}
+          </div>
 
           <div className="field-map-frame">
             <div className="field-map" ref={mapNodeRef} />
             {mapError && <div className="map-empty-state">{mapError}</div>}
             {!mapError && !mapReady && <div className="map-empty-state">Loading satellite map...</div>}
+            {!mapError && mapReady && (overlayLoading || overlayError || overlayAttribution) && (
+              <div className="map-overlay-status">
+                {overlayLoading ? <span>Loading {overlayMode} layer...</span> : null}
+                {!overlayLoading && overlayError ? <span>{overlayError}</span> : null}
+                {!overlayLoading && !overlayError && overlayAttribution ? <span>{overlayAttribution}</span> : null}
+              </div>
+            )}
           </div>
         </div>
 
@@ -348,6 +579,18 @@ function FieldIntelligenceMap() {
                   <strong>Earth Engine</strong>
                 </div>
               </div>
+              {analysis.satelliteMetrics && (
+                <div className="vegetation-index-grid">
+                  <div className="vegetation-index-card">
+                    <span>NDVI</span>
+                    <strong>{analysis.satelliteMetrics.ndviMean.toFixed(2)}</strong>
+                  </div>
+                  <div className="vegetation-index-card">
+                    <span>NDMI</span>
+                    <strong>{analysis.satelliteMetrics.ndmiMean.toFixed(2)}</strong>
+                  </div>
+                </div>
+              )}
               {analysis.satelliteError && (
                 <p className="field-warning">{analysis.satelliteError}</p>
               )}

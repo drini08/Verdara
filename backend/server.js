@@ -6,7 +6,7 @@ import { signup, login, getUserById, getUserAnalysisHistory, saveAnalysisResult 
 import { authMiddleware, optionalAuthMiddleware } from './auth.js';
 import { analyzeCropImage } from './analysisEngine.js';
 import { analyzeFieldPolygon } from './fieldAnalysis.js';
-import { getWeatherRisk } from './weatherService.js';
+import { getRadarOverlay, getWeatherRisk } from './weatherService.js';
 import { getMarketplacePosts, createMarketplacePost, addComment, getPostComments, updateMarketplacePost, deletePost, markPostAsCompleted } from './marketplace.js';
 import { generateMarketplaceItemImage } from './openaiService.js';
 import { initializeDatabase, getCollection, updateRecord, removeRecord } from './database.js';
@@ -133,6 +133,15 @@ app.get('/api/weather/field', async (req, res) => {
   try {
     const weather = await getWeatherRisk(req.query);
     res.json(weather);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/weather/radar', async (req, res) => {
+  try {
+    const radar = await getRadarOverlay();
+    res.json(radar);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

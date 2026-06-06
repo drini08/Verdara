@@ -818,6 +818,37 @@ h2 {
   background: #ffffff;
 }
 
+.field-overlay-toolbar {
+  display: flex;
+  gap: 8px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  background: #f8faf7;
+}
+
+.field-overlay-toolbar button {
+  border: 1px solid rgba(26, 77, 40, 0.12);
+  border-radius: 999px;
+  background: #ffffff;
+  color: var(--fg-muted);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 8px 12px;
+}
+
+.field-overlay-toolbar button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.field-overlay-toolbar .overlay-active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #ffffff;
+}
+
 .field-map-toolbar button,
 .field-search button,
 .primary-action {
@@ -899,6 +930,21 @@ h2 {
   font-size: 0.95rem;
   padding: 24px;
   text-align: center;
+}
+
+.map-overlay-status {
+  position: absolute;
+  left: 14px;
+  bottom: 14px;
+  z-index: 2;
+  max-width: min(340px, calc(100% - 28px));
+  border-radius: 999px;
+  background: rgba(17, 24, 39, 0.8);
+  color: #f6faf7;
+  font-size: 0.78rem;
+  line-height: 1.35;
+  padding: 8px 12px;
+  backdrop-filter: blur(8px);
 }
 
 .field-analysis-panel {
@@ -1031,6 +1077,35 @@ h2 {
   display: block;
   margin-top: 5px;
   font-size: 1rem;
+}
+
+.vegetation-index-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.vegetation-index-card {
+  border: 1px solid rgba(26, 77, 40, 0.14);
+  border-radius: var(--radius);
+  background: linear-gradient(180deg, rgba(26, 77, 40, 0.08), rgba(255, 255, 255, 0.98));
+  padding: 12px;
+}
+
+.vegetation-index-card span {
+  display: block;
+  color: var(--fg-muted);
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+}
+
+.vegetation-index-card strong {
+  display: block;
+  margin-top: 6px;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: -0.03em;
 }
 
 .field-warning {
@@ -1995,6 +2070,10 @@ h2 {
 
   .field-search {
     flex-basis: 100%;
+  }
+
+  .field-overlay-toolbar {
+    flex-wrap: wrap;
   }
 
   .analyze-upload-panel {
